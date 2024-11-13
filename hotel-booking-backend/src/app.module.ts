@@ -4,14 +4,18 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { HotelsModule } from './hotels/hotels.module'; 
+import { HotelsModule } from './hotels/hotels.module';
+import { ReservationsModule } from './reservations/reservations.module'; 
+import { SupportChatModule } from './support-chat/support-chat.module';
 
 @Module({
   imports: [
     MongooseModule.forRoot('mongodb://localhost:27017/hotel-booking'), 
     UsersModule,
     AuthModule,
-    HotelsModule, 
+    HotelsModule,
+    ReservationsModule, 
+    SupportChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -10,7 +10,7 @@ import { SupportChatModule } from './support-chat/support-chat.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost:27017/hotel-booking'), 
+    MongooseModule.forRoot('mongodb://mongo:27017/hotel-booking'), 
     UsersModule,
     AuthModule,
     HotelsModule,

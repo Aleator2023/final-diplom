@@ -1,16 +1,39 @@
-import { Controller, Get, Post, Put, Param, Query, Body, NotFoundException } from '@nestjs/common';
+import { 
+  Controller, 
+  Get, 
+  Post, 
+  Put, 
+  Param, 
+  Query, 
+  Body, 
+  NotFoundException, 
+  UseInterceptors, 
+  UploadedFiles, 
+  UseGuards 
+} from '@nestjs/common';
 import { HotelsService } from './hotels.service';
 import { Hotel } from '../schemas/hotel.schema';
 import { HotelRoom } from '../schemas/hotel-room.schema';
-import { Types } from 'mongoose'; 
-import { SearchHotelParams, UpdateHotelParams, SearchRoomsParams, UpdateHotelRoomParams } from './hotel-interfaces';
+import { Types } from 'mongoose';
+import { 
+  SearchHotelParams, 
+  UpdateHotelParams, 
+  SearchRoomsParams, 
+  UpdateHotelRoomParams 
+} from './hotel-interfaces';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { RolesGuard } from '../auth/roles.guard'; 
+import { Roles } from '../auth/roles.decorator';
+
 
 @Controller('hotels')
 export class HotelsController {
   constructor(private readonly hotelsService: HotelsService) {}
 
-  // Создание новой гостиницы
+  // Создание новой гостиницы (доступно только администратору)
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   async createHotel(@Body() data: Partial<Hotel>): Promise<Hotel> {
     return this.hotelsService.createHotel(data);
   }
@@ -31,16 +54,19 @@ export class HotelsController {
     return this.hotelsService.search(params);
   }
 
-  // Обновление данных гостиницы
+  // Обновление данных гостиницы (доступно только администратору)
   @Put(':id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   async updateHotel(@Param('id') id: string, @Body() data: UpdateHotelParams): Promise<Hotel> {
     return this.hotelsService.update(id, data);
   }
 
-  // Создание нового номера в гостинице
+  // Создание нового номера в гостинице (доступно только администратору)
   @Post(':hotelId/rooms')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   async createRoom(@Param('hotelId') hotelId: string, @Body() data: Partial<HotelRoom>): Promise<HotelRoom> {
-    // Преобразуем hotelId в ObjectId
     const roomData = { ...data, hotel: new Types.ObjectId(hotelId) };
     return this.hotelsService.createRoom(roomData);
   }
@@ -61,13 +87,21 @@ export class HotelsController {
     @Param('hotelId') hotelId: string,
     @Query() params: Omit<SearchRoomsParams, 'hotel'>,
   ): Promise<HotelRoom[]> {
-    // Преобразуем hotelId в ObjectId и добавляем к параметрам
     return this.hotelsService.searchRooms({ ...params, hotel: new Types.ObjectId(hotelId) });
   }
 
-  // Обновление данных номера
+  // Обновление данных номера (доступно только администратору)
   @Put('rooms/:roomId')
-  async updateRoom(@Param('roomId') roomId: string, @Body() data: UpdateHotelRoomParams): Promise<HotelRoom> {
-    return this.hotelsService.updateRoom(roomId, data);
-  }
+@UseGuards(RolesGuard)
+@Roles('admin')
+@UseInterceptors(FilesInterceptor('images'))
+async updateRoom(
+  @Param('roomId') roomId: string,
+  @Body() data: UpdateHotelRoomParams,
+  @UploadedFiles() files: Array<{ path: string }>, // простой тип объекта для файлов
+): Promise<HotelRoom> {
+  const images = files.map(file => file.path);
+  const updatedData = { ...data, images: [...(data.images || []), ...images] };
+  return this.hotelsService.updateRoom(roomId, updatedData);
+}
 }

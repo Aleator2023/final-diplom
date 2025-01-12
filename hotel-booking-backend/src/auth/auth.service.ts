@@ -10,6 +10,37 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  async register(clientData: {
+    email: string;
+    password: string;
+    name: string;
+    contactPhone: string;
+  }): Promise<any> {
+    const { email, password, name, contactPhone } = clientData;
+  
+    // Проверка, существует ли пользователь с данным email
+    const existingUser = await this.usersService.findByEmail(email);
+    if (existingUser) {
+      throw new UnauthorizedException('Email already in use');
+    }
+  
+    // Хеширование пароля
+    const passwordHash = await bcrypt.hash(password, 10);
+  
+    // Создание нового пользователя с ролью client
+    const newUser = await this.usersService.create({
+      email,
+      passwordHash,
+      name,
+      contactPhone,
+      role: 'client', // Устанавливаем роль client
+    });
+  
+    // Возврат данных пользователя без пароля
+    const { passwordHash: _, ...userWithoutPassword } = newUser;
+    return userWithoutPassword;
+  } 
+
   // Метод для валидации пользователя
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);

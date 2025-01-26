@@ -10,41 +10,34 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(clientData: {
-    email: string;
-    password: string;
-    name: string;
-    contactPhone: string;
-  }): Promise<any> {
-    const { email, password, name, contactPhone } = clientData;
-  
+  async register(userDto) {
+    const { email, password, name, contactPhone } = userDto;
     // Проверка, существует ли пользователь с данным email
     const existingUser = await this.usersService.findByEmail(email);
     if (existingUser) {
       throw new UnauthorizedException('Email already in use');
     }
-  
-    // Хеширование пароля
-    const passwordHash = await bcrypt.hash(password, 10);
-  
-    // Создание нового пользователя с ролью client
-    const newUser = await this.usersService.create({
-      email,
-      passwordHash,
-      name,
-      contactPhone,
-      role: 'client', // Устанавливаем роль client
-    });
-  
-    // Возврат данных пользователя без пароля
-    const { passwordHash: _, ...userWithoutPassword } = newUser;
-    return userWithoutPassword;
-  } 
+
+    try {
+      const newUser = await this.usersService.create({
+        email,
+        password, // Сохраняем хэшированный пароль
+        name,
+        contactPhone,
+      });
+
+      return newUser;
+    } catch (error) {
+      return error;
+    }
+  }
 
   // Метод для валидации пользователя
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
+
     if (user && (await bcrypt.compare(password, user.passwordHash))) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { passwordHash, ...result } = user;
       return result; // возвращаем данные пользователя без хеша пароля
     }

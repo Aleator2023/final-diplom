@@ -1,18 +1,24 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/LoginRegister.css';
+import axios from 'axios';
 
 const LoginRegister: React.FC = () => {
   const navigate = useNavigate();
   const [isLoginForm, setIsLoginForm] = useState(true); // Флаг для переключения формы
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  // const [error, setError] = useState<string | null>(null);
+  // const [success, setSuccess] = useState<string | null>(null);
 
-  const handleLoginClick = () => {
-    if (username === 'admin' && password === 'admin123') {
-      navigate('/admin'); 
-    } else {
+  const handleLoginClick = async () => {
+    try {
+      await axios.post('http://localhost:3000/auth/login', { email, password });
+      
+      // navigate('/admin');
+    } catch (error) {
       setErrorMessage('Неверный логин или пароль');
     }
   };
@@ -25,9 +31,12 @@ const LoginRegister: React.FC = () => {
     setIsLoginForm(true); // Переключение на форму входа
   };
 
-  const handleRegisterSubmit = () => {
-    console.log('Регистрация пользователя');
-    // Здесь можно реализовать логику регистрации
+  const handleRegisterSubmit = async () => {
+    try {
+      await axios.post('http://localhost:3000/auth/register', { name: username, password, email, contactPhone: '+12341234567' });
+    } catch (err: any) {
+      console.error(err);
+    }
   };
 
   return (
@@ -122,6 +131,8 @@ const LoginRegister: React.FC = () => {
                   <input
                     type="email"
                     placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 <div className="form-group">

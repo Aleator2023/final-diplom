@@ -22,6 +22,6 @@
     "noFallthroughCasesInSwitch": false,
     "moduleResolution": "node"
   },
-  "include": ["src/**/*.ts", "test/users.e2e-spec.ts"],
+  "include": ["src/**/*.ts", "src/users/users.e2e-spec.ts"],
   "exclude": ["node_modules", "dist"]
 }

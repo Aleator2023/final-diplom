@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import * as bcrypt from 'bcrypt';
-import { User } from './schemas/user.schema';
+import * as bcrypt from 'bcryptjs';
+import { User } from '../schemas/user.schema';
 
 
 interface SearchUserParams {
@@ -13,6 +13,7 @@ interface SearchUserParams {
   contactPhone?: string;
 }
 
+
 function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); 
 }
@@ -22,9 +23,14 @@ function escapeRegExp(string: string): string {
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  async create(data: Partial<User>): Promise<User> {
-    const passwordHash = await bcrypt.hash(data.passwordHash, 10);
-    const newUser = new this.userModel({ ...data, passwordHash });
+  async create(data: Partial<User> & { password?: string }): Promise<User> {
+    const passwordHash = data.password ? await bcrypt.hash(data.password, 10) : undefined;
+    
+    const newUser = new this.userModel({
+      ...data,
+      passwordHash,
+    });
+    
     return newUser.save();
   }
 

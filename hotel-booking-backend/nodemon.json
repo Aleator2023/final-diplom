@@ -1,0 +1,7 @@
+{
+    "watch": ["src", "uploads"],
+    "ext": "ts,js,json",
+    "legacyWatch": true,
+    "ignore": ["node_modules"],
+    "exec": "ts-node -r tsconfig-paths/register src/main.ts"
+}

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { getModelToken } from '@nestjs/mongoose';
-import { User } from './schemas/user.schema';
+import { User } from '../schemas/user.schema';
 import * as bcrypt from 'bcrypt';
 
 describe('UsersService', () => {

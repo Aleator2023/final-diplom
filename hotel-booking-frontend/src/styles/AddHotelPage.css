@@ -1,0 +1,121 @@
+/* AddHotelPage.css */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 auto;
+    padding: 20px;
+    max-width: 1200px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  }
+  
+  .logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .sidebar {
+    width: 200px;
+    margin-right: 20px;
+  }
+  
+  .sidebar ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .sidebar ul li {
+    margin: 10px 0;
+    font-size: 16px;
+    color: #333;
+    cursor: pointer;
+  }
+  
+  .sidebar ul li:hover {
+    color: #007BFF;
+  }
+  
+  .main-content {
+    flex: 1;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 100%;
+  }
+  
+  .hotel-card {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  }
+  
+  .hotel-card h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  
+  .hotel-card p {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  
+  .hotel-card .actions {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .button {
+    padding: 10px 15px;
+    font-size: 14px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .button.edit {
+    background-color: #FFA500;
+    color: #fff;
+  }
+  
+  .button.edit:hover {
+    background-color: #cc8400;
+  }
+  
+  .button.add-room {
+    background-color: #4CAF50;
+    color: #fff;
+  }
+  
+  .button.add-room:hover {
+    background-color: #3e8e41;
+  }
+  
+  .image-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .image-container .image-placeholder {
+    background-color: #ccc;
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+  }

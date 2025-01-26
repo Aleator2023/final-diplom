@@ -1,0 +1,30 @@
+services:
+  backend:
+    build: ./hotel-booking-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongo:27017/hotel-booking
+    depends_on:
+      - mongo
+
+  frontend:
+    build: ./hotel-booking-frontend
+    ports:
+      - "3001:80"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://backend:3000
+    depends_on:
+      - backend
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

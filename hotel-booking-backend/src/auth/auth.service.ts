@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service'; // импорт сервиса пользователей для получения данных о пользователе
+import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -12,41 +12,46 @@ export class AuthService {
 
   async register(userDto) {
     const { email, password, name, contactPhone } = userDto;
+    
     // Проверка, существует ли пользователь с данным email
     const existingUser = await this.usersService.findByEmail(email);
     if (existingUser) {
       throw new UnauthorizedException('Email already in use');
     }
 
+    // Хешируем пароль перед созданием пользователя
+    const passwordHash = await bcrypt.hash(password, 10);
+
     try {
       const newUser = await this.usersService.create({
         email,
-        password, // Сохраняем хэшированный пароль
+        passwordHash,
         name,
         contactPhone,
       });
 
       return newUser;
     } catch (error) {
-      return error;
+      throw new UnauthorizedException('Registration failed');
     }
   }
 
-  // Метод для валидации пользователя
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
 
     if (user && (await bcrypt.compare(password, user.passwordHash))) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { passwordHash, ...result } = user;
-      return result; // возвращаем данные пользователя без хеша пароля
+      const { passwordHash, ...result } = user.toObject();
+      return result;
     }
     return null;
   }
 
-  // Метод для входа (генерация JWT)
   async login(user: any) {
-    const payload = { email: user.email, sub: user._id };
+    const payload = {
+      email: user.email,
+      sub: user._id,
+      role: user.role,  // Добавляем роль пользователя в токен
+    };
     return {
       access_token: this.jwtService.sign(payload),
     };

@@ -1,5 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
@@ -7,9 +6,16 @@ export class AdminGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    if (!user || user.role !== 'admin') {
+    console.log('AdminGuard: Checking user', user); // Логирование пользователя
+
+    if (!user) {
+      throw new UnauthorizedException('You must be logged in to access this resource');
+    }
+
+    if (user.role !== 'admin') {
       throw new ForbiddenException('Access restricted to administrators');
     }
+
     return true;
   }
 }

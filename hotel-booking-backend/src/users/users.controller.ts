@@ -6,7 +6,7 @@ import { CreateAdminDto } from '../dto/create-admin.dto';
 import { AdminGuard } from '../auth/admin.guard';
 
 
-@Controller('users')
+@Controller('/users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -65,7 +65,6 @@ export class UsersController {
     };
   }
 
-  
   @Get()
   async findAll(@Query() query: SearchUserParams) {
     try {
@@ -87,4 +86,17 @@ export class UsersController {
     await this.usersService.delete(id);
     return { message: 'User deleted successfully' };
   }
+  @Get()
+  async getUsers(@Query() query: SearchUserParams) {
+    const users = await this.usersService.findAll(query);
+    return users.map((user) => ({
+      id: user._id.toHexString(),
+      email: user.email,
+      name: user.name,
+      contactPhone: user.contactPhone,
+      role: user.role,
+    }));
+  }
+
 }
+

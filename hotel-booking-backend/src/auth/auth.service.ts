@@ -28,6 +28,7 @@ export class AuthService {
         passwordHash,
         name,
         contactPhone,
+        role: 'client',
       });
 
       return newUser;

@@ -80,7 +80,7 @@ export class UsersController {
       throw new NotFoundException('Users not found');
     }
   }
-  @UseGuards(AdminGuard)
+  
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
     await this.usersService.delete(id);

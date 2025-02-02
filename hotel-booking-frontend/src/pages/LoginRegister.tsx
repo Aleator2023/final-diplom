@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import '../styles/LoginRegister.css';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import * as Antd from 'antd';
+import '../styles/AdminLayout.css';
+const { Layout, Menu, Spin, Button, Form, Input, Card } = Antd;
+const { Header, Content, Sider } = Layout;
+import { LockOutlined, UserOutlined } from '@ant-design/icons';
 
-// Определение интерфейсов для данных ответа от сервера
+const BASE_URL = 'http://localhost:3000';
+
 interface AuthResponse {
   access_token: string;
 }
@@ -16,180 +22,238 @@ interface UserResponse {
   role: 'client' | 'admin' | 'manager';
 }
 
+interface RegisterCredentials {
+  email: string;
+  password: string;
+  name: string;
+  contactPhone?: string;
+}
+
 const LoginRegister: React.FC = () => {
   const navigate = useNavigate();
   const [isLoginForm, setIsLoginForm] = useState(true); // Флаг для переключения формы
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
-  const [email, setEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const items = [
+    {
+      key: '1', // Ключ для каждого элемента меню (должен быть уникальным)
+      label: 'Все гостиницы',
+      onClick: () => navigate('/all-hotels'),
+    },
+    {
+      key: '2',
+      label: 'Поиск номера',
+      onClick: () => navigate('/room-search'),
+    },
+    {
+      key: '3',
+      label: 'Добавить гостиницу',
+      onClick: () => navigate('/add-hotel'),
+    },
+  ];
 
   // Функция обработки входа
-  const handleLoginClick = async () => {
+  const handleLogin = async (credentials: { email: string, password: string }) => {
     setErrorMessage('');
+    setLoading(true);
+
     try {
-      const response = await axios.post<AuthResponse>('http://localhost:3000/auth/login', {
-        email,
-        password,
-      });
+      const { access_token } = await axios.post<AuthResponse>(`${BASE_URL}/auth/login`, credentials).then(res => res.data);
 
-      if (!response.data.access_token) {
-        throw new Error('Неверный ответ сервера');
+      if (!access_token) {
+        throw new Error('Invalid server response: no access token');
       }
 
-      // Сохранение токена в localStorage
-      localStorage.setItem('token', response.data.access_token);
+      localStorage.setItem('token', access_token);
 
-      // Запрашиваем информацию о пользователе
-      const userResponse = await axios.get<UserResponse>('http://localhost:3000/users/find-by-email', {
-        params: { email },
-        headers: {
-          Authorization: `Bearer ${response.data.access_token}`,
-        },
-      });
+      const user = await axios.get<UserResponse>(`${BASE_URL}/users/find-by-email`, {
+        params: { email: credentials.email },
+        headers: { Authorization: `Bearer ${access_token}` },
+      }).then(res => res.data);
 
-      if (!userResponse.data.role) {
-        throw new Error('Ошибка получения данных пользователя');
+
+      if (!user.role) {
+        throw new Error('Error fetching user data: no role');
       }
 
-      // Проверяем роль пользователя и перенаправляем
-      if (userResponse.data.role === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
-      }
-    } catch (error) {
-      setErrorMessage('Неверный логин или пароль');
+      navigate(user.role === 'admin' ? '/admin/users' : '/dashboard');
+
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Login failed'); // Более конкретное сообщение об ошибке или общее
+    } finally {
+      setLoading(false);
     }
   };
 
   // Функция обработки регистрации
-  const handleRegisterSubmit = async () => {
+  const handleRegister = async (credentials: RegisterCredentials) => {
     setErrorMessage('');
+  
     try {
-      const response = await axios.post<UserResponse>('http://localhost:3000/auth/register', {
-        name,
-        email,
-        password,
-        contactPhone: '+12341234567',
+      const response = await axios.post<UserResponse>(`${BASE_URL}/auth/register`, {
+        ...credentials, 
+        contactPhone: credentials.contactPhone || '+12341234567', // Используем переданный номер или дефолтный
       });
 
       if (response.data && response.data.email) {
-        alert(`Регистрация успешна! Добро пожаловать, ${response.data.name}`);
         setIsLoginForm(true); // Переключение на форму входа
-      } else {
-        throw new Error('Ошибка регистрации');
       }
-    } catch (error) {
-      setErrorMessage('Ошибка при регистрации. Возможно, email уже используется.');
+    } catch (error: any) {
+      setErrorMessage(error.response?.data?.message || 'Registration failed.');
     }
+  };
+  
+
+  const spinContentStyle: React.CSSProperties = {
+    padding: 50,
+    background: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 4,
+  };
+  const spinContent = <div style={spinContentStyle} />;
+
+  const onLogin = (values: any) => {
+    handleLogin({ email: values.email, password: values.password });
+  };
+
+  const onRegister = (values: any) => {
+    handleRegister({ name: values.name, email: values.email, password: values.password });
   };
 
   return (
-    <div className="container">
-      <header className="header">
-        <div className="logo">
-          <img src="/logo/logo.png" alt="Logo" className="logo-image" />
+    <Layout>
+      <Header className="nav-header">
+        <img src="/logo/logo.png" alt="Logo" className="header-logo" />
+
+        <button
+          className="nav-button"
+          onClick={isLoginForm ? () => setIsLoginForm(false) : () => setIsLoginForm(true)}
+        >
+          {isLoginForm ? 'Зарегистрироваться ▼' : 'Войти ▼'}
+        </button>
+      </Header>
+
+      <Layout>
+        <Sider style={{ 'height': '100vh', 'backgroundColor': '#fff' }}>
+          <Menu items={items} />
+        </Sider>
+
+        <div style={{ margin: '0 auto'}}>
+          { loading ?
+            (
+              <Spin tip="Loading" size="large">
+                {spinContent}
+              </Spin>
+            ) :
+            (
+              <Content style={{ padding: '20px', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', }}>
+                {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+
+                {isLoginForm ?
+                  (
+                    <Card style={{ width: 350, display: 'flex', alignItems: 'center', justifyContent: 'center', }}>
+                      <Form
+                        name="login"
+                        initialValues={{ remember: true }}
+                        style={{ width: '100%', }}
+                        onFinish={onLogin}
+                      >
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'space-between', justifyContent: 'center', marginBottom: 10, }}>
+                          <a href="#" onClick={() => setIsLoginForm(true)}>Войти</a> |{' '}
+                          <span>или</span>
+                          <a href="#" onClick={() => setIsLoginForm(false)}>Зарегистрироваться</a>
+                        </div>
+
+                        <Form.Item
+                          name="email"
+                          rules={[{ required: true, message: 'Пожалуйста, введите свой адрес email' }]}
+                        >
+                          <Input prefix={<UserOutlined />} placeholder="Введите email" />
+                        </Form.Item>
+
+                        <Form.Item
+                          name="password"
+                          rules={[{ required: true, message: 'Пожалуйста, введите свой пароль' }]}
+                        >
+                          <Input prefix={<LockOutlined />} type="password" placeholder="Введите пароль" />
+                        </Form.Item>
+
+                        <Button block type="primary" htmlType="submit">
+                          Войти
+                        </Button>
+                      </Form>
+                    </Card>
+                  ) :
+                  (
+                    <Card style={{ width: 350, display: 'flex', alignItems: 'center', justifyContent: 'center', }}>
+                      <Form
+                        name="login"
+                        initialValues={{ remember: true }}
+                        style={{ width: '100%', }}
+                        onFinish={onRegister}
+                      >
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'space-between', justifyContent: 'center', marginBottom: 10, }}>
+                          <a href="#" onClick={() => setIsLoginForm(true)}>Войти</a> |{' '}
+                          <span>или</span>
+                          <a href="#" onClick={() => setIsLoginForm(false)}>Зарегистрироваться</a>
+                        </div>
+
+                        <Form.Item
+                          name="name"
+                          rules={[{ required: true, message: 'Пожалуйста, введите своё имя' }]}
+                        >
+                          <Input placeholder="Введите имя" />
+                        </Form.Item>
+
+                        <Form.Item
+                          name="email"
+                          rules={[{ required: true, message: 'Поле обязательно' }, { type: 'email', message: 'Пожалуйста, введите корректный адрес email' }]}
+                        >
+                          <Input placeholder="Введите email" />
+                        </Form.Item>
+
+                        <Form.Item
+                          name="password"
+                          rules={[{ required: true, message: 'Пожалуйста, введите свой пароль' }]}
+                        >
+                          <Input type="password" placeholder="Введите пароль" />
+                        </Form.Item>
+
+                        <Form.Item
+                          name="confirm"
+                          dependencies={['password']}
+                          hasFeedback
+                          rules={[
+                            {
+                              required: true,
+                              message: 'Пожалуйста, подтвердите пароль',
+                            },
+                            ({ getFieldValue }) => ({
+                              validator(_, value) {
+                                if (!value || getFieldValue('password') === value) {
+                                  return Promise.resolve();
+                                }
+                                return Promise.reject(new Error('Пароли не соврадают!'));
+                              },
+                            }),
+                          ]}
+                        >
+                          <Input.Password />
+                        </Form.Item>
+
+                        <Button block type="primary" htmlType="submit">
+                          Зарегистрироваться
+                        </Button>
+                      </Form>
+                    </Card>
+                  )
+                }
+              </Content>
+            )
+          }
         </div>
-        <nav>
-          <button
-            className="nav-button"
-            onClick={isLoginForm ? () => setIsLoginForm(false) : () => setIsLoginForm(true)}
-          >
-            {isLoginForm ? 'Зарегистрироваться ▼' : 'Войти ▼'}
-          </button>
-        </nav>
-      </header>
-
-      <div className="content">
-        <aside className="sidebar">
-          <ul>
-            <li>Все гостиницы</li>
-            <li>Поиск номера</li>
-            <li>Добавить гостиницу</li>
-            <li>Пользователи</li>
-          </ul>
-        </aside>
-
-        <main className="main-content">
-          <div className="form-container">
-            <h2>
-              {isLoginForm ? (
-                <>
-                  <a href="#" onClick={() => setIsLoginForm(true)}>Войти</a> |{' '}
-                  <a href="#" onClick={() => setIsLoginForm(false)}>Зарегистрироваться</a>
-                </>
-              ) : (
-                <>
-                  <a href="#" onClick={() => setIsLoginForm(true)}>Войти</a> |{' '}
-                  <a href="#" onClick={() => setIsLoginForm(false)}>Зарегистрироваться</a>
-                </>
-              )}
-            </h2>
-            {isLoginForm ? (
-              <form onSubmit={(e) => e.preventDefault()}>
-                <div className="form-group">
-                  <label>Введите email</label>
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Введите пароль</label>
-                  <input
-                    type="password"
-                    placeholder="Пароль"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-                <button type="button" onClick={handleLoginClick} className="login-button">
-                  Войти
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={(e) => e.preventDefault()}>
-                <div className="form-group">
-                  <label>Введите имя</label>
-                  <input
-                    type="text"
-                    placeholder="Имя"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Введите email</label>
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Введите пароль</label>
-                  <input
-                    type="password"
-                    placeholder="Пароль"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-                <button type="button" onClick={handleRegisterSubmit} className="register-button">
-                  Зарегистрироваться
-                </button>
-              </form>
-            )}
-          </div>
-        </main>
-      </div>
-    </div>
+      </Layout>
+    </Layout>
   );
 };
 

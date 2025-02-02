@@ -1,17 +1,28 @@
-import { Controller, Get, Post, Delete, Body, Param, Query, NotFoundException, UnauthorizedException, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  Query,
+  NotFoundException,
+  // UseGuards,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserDocument } from '../schemas/user.schema';
 import { SearchUserParams } from './users.interface';
 import { CreateAdminDto } from '../dto/create-admin.dto';
-import { AdminGuard } from '../auth/admin.guard';
-
+// import { AdminGuard } from '../auth/admin.guard';
 
 @Controller('/users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  async create(@Body() data: Partial<UserDocument>): Promise<{ id: string; email: string; name: string; role: string }> {
+  async create(
+    @Body() data: Partial<UserDocument>,
+  ): Promise<{ id: string; email: string; name: string; role: string }> {
     const user = await this.usersService.create(data);
     return {
       id: user._id.toHexString(),
@@ -37,11 +48,14 @@ export class UsersController {
   }
 
   @Get('find-by-email')
-  async findByEmail(@Query('email') encodedEmail: string): Promise<{ id: string; email: string; name: string; role: string }> {
+  async findByEmail(
+    @Query('email') encodedEmail: string,
+  ): Promise<{ id: string; email: string; name: string; role: string }> {
     const email = decodeURIComponent(encodedEmail);
-    console.log(`Search request received for email: ${email}`); // Логирование запроса
-  
-    const user: UserDocument | null = await this.usersService.findByEmail(email);
+    console.log(`Search request received for email: ${email}`);
+
+    const user: UserDocument | null =
+      await this.usersService.findByEmail(email);
     if (!user) {
       throw new NotFoundException(`User with email ${email} not found`);
     }
@@ -54,7 +68,13 @@ export class UsersController {
   }
 
   @Get(':id')
-  async findById(@Param('id') id: string): Promise<{ id: string; email: string; name: string; contactPhone?: string; role: string }> {
+  async findById(@Param('id') id: string): Promise<{
+    id: string;
+    email: string;
+    name: string;
+    contactPhone?: string;
+    role: string;
+  }> {
     const user = await this.usersService.findById(id);
     return {
       id: user._id.toHexString(),
@@ -77,26 +97,19 @@ export class UsersController {
         role: user.role,
       }));
     } catch (error) {
-      throw new NotFoundException('Users not found');
+      throw new NotFoundException('Users not found', error);
     }
   }
-  
+
+  // @UseGuards(AdminGuard)
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
-    await this.usersService.delete(id);
-    return { message: 'User deleted successfully' };
-  }
-  @Get()
-  async getUsers(@Query() query: SearchUserParams) {
-    const users = await this.usersService.findAll(query);
-    return users.map((user) => ({
-      id: user._id.toHexString(),
-      email: user.email,
-      name: user.name,
-      contactPhone: user.contactPhone,
-      role: user.role,
-    }));
-  }
+    try {
+      await this.usersService.delete(id);
 
+      return { message: 'User deleted successfully' };
+    } catch (error) {
+      throw new NotFoundException('Users not found', error);
+    }
+  }
 }
-

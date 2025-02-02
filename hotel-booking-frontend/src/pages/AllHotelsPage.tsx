@@ -1,7 +1,11 @@
 import React from 'react';
 
 const AllHotelsPage: React.FC = () => {
-  return <div>Страница всех гостиниц</div>;
+  return (
+    <div>
+      <h1>Страница всех гостиниц</h1>
+    </div>
+  );
 };
 
 export default AllHotelsPage;

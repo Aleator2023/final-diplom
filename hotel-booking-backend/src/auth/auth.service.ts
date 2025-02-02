@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
+import { CreateClientDto } from '../dto/create-client.dto';
 
 @Injectable()
 export class AuthService {
@@ -10,30 +11,29 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(userDto) {
-    const { email, password, name, contactPhone } = userDto;
+  async register(userDto: CreateClientDto) {
+    const { email, password, name, contactPhone, role = 'client' } = userDto;
     
-    // Проверка, существует ли пользователь с данным email
-    const existingUser = await this.usersService.findByEmail(email);
-    if (existingUser) {
-      throw new UnauthorizedException('Email already in use');
-    }
-
-    // Хешируем пароль перед созданием пользователя
-    const passwordHash = await bcrypt.hash(password, 10);
-
     try {
+      // Проверка, существует ли пользователь с данным email
+      const existingUser = await this.usersService.findByEmail(email);
+    
+      if (existingUser) {
+        throw new UnauthorizedException('Email already in use');
+      }
+
       const newUser = await this.usersService.create({
         email,
-        passwordHash,
+        password,
         name,
         contactPhone,
-        role: 'client',
+        role: role ?? 'client' // Присвоить 'client' если role не указана
       });
 
       return newUser;
     } catch (error) {
-      throw new UnauthorizedException('Registration failed');
+      console.error('Error during registration:', error.message); // Логируем сообщение об ошибке
+      throw new UnauthorizedException('auth.service.ts. Registration failed');
     }
   }
 

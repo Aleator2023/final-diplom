@@ -1,4 +1,11 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  MinLength,
+  IsOptional,
+  IsEnum,
+} from 'class-validator';
 
 export class CreateClientDto {
   @IsNotEmpty({ message: 'Email is required' })
@@ -14,7 +21,13 @@ export class CreateClientDto {
   @IsString()
   name: string;
 
-  @IsNotEmpty({ message: 'Contact phone is required' })
+  @IsOptional()
   @IsString()
-  contactPhone: string;
+  contactPhone?: string;
+
+  @IsOptional()
+  @IsEnum(['client', 'admin', 'manager'], {
+    message: 'Role must be either client, admin, or manager',
+  })
+  role?: 'client' | 'admin' | 'manager';
 }

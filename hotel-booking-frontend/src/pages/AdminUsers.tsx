@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import * as Antd from 'antd';
+const { Table, Input } = Antd;
+const { Search } = Input;
+import type { GetProps } from 'antd';
+import { Link } from 'react-router-dom';
+import { getUsers } from '../services/api'; 
 
 interface User {
   id: string;
@@ -9,72 +14,78 @@ interface User {
   role: string;
 }
 
+type SearchProps = GetProps<typeof Input.Search>;
+const columns = [
+  {
+    title: 'ID',
+    dataIndex: 'id',
+  },
+  {
+    title: 'Имя',
+    dataIndex: 'name',
+    render: (text: string, record: User) => (
+      <Link to={`/admin/users/${record.id}`}>
+        {text}
+      </Link>
+    ),
+  },
+  {
+    title: 'Телефон',
+    dataIndex: 'contactPhone',
+  },
+  {
+    title: 'Email',
+    dataIndex: 'email',
+  },
+
+  {
+    title: 'Роль',
+    dataIndex: 'role',
+  },
+];
+
 const AdminUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleFetchUsers = async (search?: string) => {
+    try {
+      setLoading(true);
+      const fetchedUsers = await getUsers(search);
+      setUsers(fetchedUsers);
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Unauthorized access');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const response = await axios.get<User[]>('http://localhost:3000/users', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUsers(response.data);
-      } catch (error: any) {
-        if (error.response?.status === 401) {
-          setError('Unauthorized access, please login again.');
-        } else if (error.response?.status === 403) {
-          setError('Access denied. You are not an admin.');
-        } else {
-          setError('Failed to fetch users');
-        }
-      }
-    };
-
-    fetchUsers();
+    handleFetchUsers(); // Вызываем обертку
   }, []);
+  
+  const onSearch: SearchProps['onSearch'] = (value) => {
+    handleFetchUsers(value);
+  };
 
   return (
     <div style={{ padding: '20px' }}>
-      <h1>Список пользователей</h1>
+      <h1>Пользователи</h1>
+
       {loading && <p>Загрузка...</p>}
+
+      <Search placeholder="Введите имя, id, телефон или почту" onSearch={onSearch} style={{ width: 400, marginBottom: 20 }} size="large" />
+
+      <Table
+        dataSource={users} 
+        columns={columns}
+        loading={loading}
+        rowKey="id"
+      />;
+
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      <table border={1} cellPadding={10}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Email</th>
-            <th>Имя</th>
-            <th>Телефон</th>
-            <th>Роль</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.length > 0 ? (
-            users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.id}</td>
-                <td>{user.email}</td>
-                <td>{user.name}</td>
-                <td>{user.contactPhone || '—'}</td>
-                <td>{user.role}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={5} style={{ textAlign: 'center' }}>Нет данных</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
     </div>
   );
 };

@@ -1,92 +1,63 @@
-import React, { useEffect, useState } from 'react';
-
-interface Hotel {
-  _id: string;
-  title: string;
-  description: string;
-  createdAt: string;
-}
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 const AllHotelsPage: React.FC = () => {
-  const [hotels, setHotels] = useState<Hotel[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [hotels, setHotels] = useState<{ _id: string; title: string; description: string; images?: string[] }[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchHotels = async () => {
       try {
-        const response = await fetch('http://localhost:3000/hotels');
-        if (!response.ok) {
-          throw new Error('Ошибка загрузки данных');
-        }
-        const data = await response.json();
-        setHotels(data);
+        const response = await axios.get<{ _id: string; title: string; description: string; images?: string[] }[]>('http://localhost:3000/hotels');
+        setHotels(response.data);
       } catch (err) {
-        setError((err as Error).message);
-      } finally {
-        setLoading(false);
+        console.error('Ошибка при загрузке гостиниц:', err);
+        setError('Ошибка при загрузке гостиниц');
       }
     };
-
     fetchHotels();
   }, []);
 
-  return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>Все гостиницы</h1>
-      
-      {loading && <p style={styles.loading}>Загрузка...</p>}
-      {error && <p style={styles.error}>Ошибка: {error}</p>}
+  const deleteHotel = async (id: string) => {
+    if (!window.confirm('Вы уверены, что хотите удалить эту гостиницу?')) return;
 
-      {!loading && !error && (
-        <ul style={styles.hotelList}>
-          {hotels.map((hotel) => (
-            <li key={hotel._id} style={styles.hotelCard}>
-              <h2>{hotel.title}</h2>
-              <p>{hotel.description}</p>
-              <small>{new Date(hotel.createdAt).toLocaleDateString()}</small>
-            </li>
-          ))}
-        </ul>
-      )}
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`http://localhost:3000/hotels/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setHotels((prevHotels) => prevHotels.filter((hotel) => hotel._id !== id));
+    } catch (err) {
+      console.error('Ошибка при удалении гостиницы:', err);
+      setError('Ошибка при удалении гостиницы');
+    }
+  };
+
+  return (
+    <div className="container">
+      <h1>Список гостиниц</h1>
+      {error && <p className="error-message">{error}</p>}
+      
+      <Link to="/admin/add-hotel">
+        <button className="add-button">Добавить гостиницу</button>
+      </Link>
+
+      <ul className="hotel-list">
+        {hotels.map((hotel) => (
+          <li key={hotel._id} className="hotel-item">
+            {hotel.images && hotel.images.length > 0 && <img src={hotel.images[0]} alt={hotel.title} className="hotel-image" />}
+            <h3>{hotel.title}</h3>
+            <p>{hotel.description}</p>
+            <Link to={`/hotels/edit/${hotel._id}`}>
+              <button className="edit-button">Редактировать</button>
+            </Link>
+            <button className="delete-button" onClick={() => deleteHotel(hotel._id)}>Удалить</button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
-};
-
-// 📌 Стилизация
-const styles: { [key: string]: React.CSSProperties } = {
-  container: {
-    maxWidth: '800px',
-    margin: '20px auto',
-    padding: '20px',
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.1)',
-    backgroundColor: '#fff',
-  },
-  title: {
-    textAlign: 'center',
-    color: '#333',
-  },
-  loading: {
-    textAlign: 'center',
-    fontSize: '18px',
-  },
-  error: {
-    color: 'red',
-    textAlign: 'center',
-  },
-  hotelList: {
-    listStyle: 'none',
-    padding: 0,
-  },
-  hotelCard: {
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    padding: '10px',
-    marginBottom: '10px',
-    backgroundColor: '#f9f9f9',
-  },
 };
 
 export default AllHotelsPage;

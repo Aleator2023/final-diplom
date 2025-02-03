@@ -25,6 +25,7 @@ import {
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { RolesGuard } from '../auth/roles.guard'; 
 import { Roles } from '../auth/roles.decorator';
+import { multerOptions } from '../config/multer.config';
 
 @Controller('hotels')
 export class HotelsController {
@@ -33,9 +34,15 @@ export class HotelsController {
   @Post()
   // @UseGuards(RolesGuard)
   // @Roles('admin')
-  async createHotel(@Body() data: Partial<Hotel>): Promise<Hotel> {
-    return this.hotelsService.createHotel(data);
+  @UseInterceptors(FilesInterceptor('images', 10, multerOptions))
+  async createHotel(
+    @Body() data: Partial<Hotel>,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ): Promise<Hotel> {
+    const images = files.map(file => `uploads/${file.filename}`); // Добавляем путь к файлам
+    return this.hotelsService.createHotel({ ...data, images });
   }
+
 
   @Get(':id')
   async findHotelById(@Param('id') id: string): Promise<Hotel> {
@@ -43,19 +50,30 @@ export class HotelsController {
   }
 
   @Get()
-  async searchHotels(@Query() params: SearchHotelParams): Promise<Hotel[]> {
-    return this.hotelsService.search(params);
-  }
+async getAllHotels(): Promise<Hotel[]> {
+  const hotels = await this.hotelsService.getAll();
+  return hotels.map(hotel => ({
+    ...hotel.toObject(),
+    images: hotel.images.map(img => `http://localhost:3000/${img}`), // Формируем полный путь
+  }));
+}
 
   @Put(':id')
-  @UseGuards(RolesGuard)
-  @Roles('admin')
-  async updateHotel(@Param('id') id: string, @Body() data: UpdateHotelParams): Promise<Hotel> {
-    return this.hotelsService.update(id, data);
+  //@UseGuards(RolesGuard)
+  //@Roles('admin')
+  @UseInterceptors(FilesInterceptor('images', 10, multerOptions))
+  async updateHotel(
+    @Param('id') id: string,
+    @Body() data: UpdateHotelParams,
+    @UploadedFiles() files: Array<{ path: string }>
+  ): Promise<Hotel> {
+    const images = files.map(file => file.path);
+    return this.hotelsService.update(id, { ...data, images });
   }
 
+
   @Delete(':id')
-  @UseGuards(RolesGuard)
+  //@UseGuards(RolesGuard)
   // @Roles('admin')
   async deleteHotel(@Param('id') id: string) {
     await this.hotelsService.deleteHotel(id);

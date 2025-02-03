@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-import * as Antd from 'antd';
-const { Table } = Antd;
-import { getUser } from '../services/api'; 
+import { useParams, Link } from 'react-router-dom';
+import { Table, Spin } from 'antd'; 
+import Typography  from 'antd/es/typography';
+import { ColumnsType } from 'antd/es/table';
+import { getUser } from '../services/api';
+
+const { Title } = Typography; // ✅ Теперь Title корректно импортируется
 
 interface User {
   id: string;
@@ -20,107 +22,79 @@ interface Hotel {
   departureDate: string;
 }
 
-const columns = [
+const columns: ColumnsType<Hotel> = [
   {
     title: 'ID',
     dataIndex: 'id',
+    key: 'id',
   },
   {
     title: 'Отель',
     dataIndex: 'name',
-    render: (text: string, record: Hotel) => (
-      <Link to={`/admin/all-hotels/${record.id}`}>
-        {text}
-      </Link>
-    ),
+    key: 'name',
+    render: (text, record) => <Link to={`/admin/hotels/${record.id}`}>{text}</Link>,
   },
   {
     title: 'Даты заезда',
     dataIndex: 'arrivalDates',
+    key: 'arrivalDates',
   },
   {
     title: 'Дата выезда',
     dataIndex: 'departureDate',
+    key: 'departureDate',
   },
 ];
 
-const User: React.FC = () => {
-  const { id } = useParams();
+const UserPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const [user, setUser] = useState<User | null>(null);
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFetchUser = async () => {
-    try {
-      setLoading(true);
-      const res = await getUser(id || '');
-      setUser(res);
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
   useEffect(() => {
-    if(id) {
-      handleFetchUser();
-    }
+    if (!id) return;
 
-    // !!! Only for testing. Remove it for production !!!
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        const res = await getUser(id);
+        setUser(res);
+      } catch (error: any) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+
+    // !!! Только для тестов. Убрать в продакшене !!!
     setHotels([
-      {
-        id: '679d0e01ca5e47a7b05ae1qw',
-        name: 'hotel-1',
-        arrivalDates: new Date().toLocaleDateString(),
-        departureDate: new Date().toLocaleDateString(),
-      },
-      {
-        id: '679d128b37a186fbc26bdfdq',
-        name: 'hotel-2',
-        arrivalDates: new Date().toLocaleDateString(),
-        departureDate: new Date().toLocaleDateString(),
-      },
-      {
-        id: '679d129a37a186fbc26bdfzx',
-        name: 'hotel-3',
-        arrivalDates: new Date().toLocaleDateString(),
-        departureDate: new Date().toLocaleDateString(),
-      },
-      {
-        id: '679d13d837a186fbc26bdfaa',
-        name: 'hotel-4',
-        arrivalDates: new Date().toLocaleDateString(),
-        departureDate: new Date().toLocaleDateString(),
-      },
-      {
-        id: '679d7b690b51e96230c52bqa',
-        name: 'hotel-5',
-        arrivalDates: new Date().toLocaleDateString(),
-        departureDate: new Date().toLocaleDateString(),
-      },
-    ])
+      { id: '679d0e01', name: 'Hotel-1', arrivalDates: new Date().toLocaleDateString(), departureDate: new Date().toLocaleDateString() },
+      { id: '679d128b', name: 'Hotel-2', arrivalDates: new Date().toLocaleDateString(), departureDate: new Date().toLocaleDateString() },
+      { id: '679d129a', name: 'Hotel-3', arrivalDates: new Date().toLocaleDateString(), departureDate: new Date().toLocaleDateString() },
+      { id: '679d13d8', name: 'Hotel-4', arrivalDates: new Date().toLocaleDateString(), departureDate: new Date().toLocaleDateString() },
+      { id: '679d7b69', name: 'Hotel-5', arrivalDates: new Date().toLocaleDateString(), departureDate: new Date().toLocaleDateString() },
+    ]);
   }, [id]);
 
+  if (loading) return <Spin size="large" />;
+
   return (
-    <div>
-      {loading && <p>Loading...</p>}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <Title level={2}>{user?.name || 'Пользователь не найден'}</Title> {/* ✅ Ошибок больше нет */}
 
-      <div style={{'display': 'flex', 'flexDirection': 'column', 'gap': '20px'}}>
-        <h1>{user?.name || 'User not found'}</h1>
-
-        <Table
-          dataSource={hotels} 
-          columns={columns}
-          loading={loading}
-          rowKey="id"
-        />;
-      </div>
+      <Table
+        dataSource={hotels}
+        columns={columns}
+        rowKey={(record) => record.id}
+      />
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
-  )
+  );
 };
 
-export default User;
+export default UserPage;

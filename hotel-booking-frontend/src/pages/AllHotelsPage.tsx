@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import '../styles/AllHotelsPage.css'; 
 
 const AllHotelsPage: React.FC = () => {
   const [hotels, setHotels] = useState<{ _id: string; title: string; description: string; images?: string[] }[]>([]);
@@ -35,27 +36,35 @@ const AllHotelsPage: React.FC = () => {
   };
 
   return (
-    <div className="container">
-      <h1>Список гостиниц</h1>
-      {error && <p className="error-message">{error}</p>}
-      
-      <Link to="/admin/add-hotel">
-        <button className="add-button">Добавить гостиницу</button>
-      </Link>
+    <div className="hotels-container">
+      <div className="hotels-header">
+        <h1>Список гостиниц</h1>
+        <Link to="/admin/add-hotel">
+          <button className="add-button">Добавить гостиницу</button>
+        </Link>
+      </div>
 
-      <ul className="hotel-list">
+      {error && <p className="error-message">{error}</p>}
+
+      <div className="hotels-list">
         {hotels.map((hotel) => (
-          <li key={hotel._id} className="hotel-item">
-            {hotel.images && hotel.images.length > 0 && <img src={hotel.images[0]} alt={hotel.title} className="hotel-image" />}
-            <h3>{hotel.title}</h3>
-            <p>{hotel.description}</p>
-            <Link to={`/admin/hotels/${hotel._id}`}>
-  <button className="edit-button">Редактировать</button>
-</Link>
-            <button className="delete-button" onClick={() => deleteHotel(hotel._id)}>Удалить</button>
-          </li>
+          <div key={hotel._id} className="hotel-card">
+            {hotel.images && hotel.images.length > 0 && (
+              <img src={hotel.images[0]} alt={hotel.title} className="hotel-image" />
+            )}
+            <div className="hotel-info">
+              <h3>{hotel.title}</h3>
+              <p>{hotel.description}</p>
+            </div>
+            <div className="hotel-actions">
+              <Link to={`/admin/hotels/${hotel._id}`}>
+                <button className="edit-button">Редактировать</button>
+              </Link>
+              <button className="delete-button" onClick={() => deleteHotel(hotel._id)}>Удалить</button>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 };

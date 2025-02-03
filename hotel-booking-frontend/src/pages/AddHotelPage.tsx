@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import '../styles/AddHotelPage.css';
+import '../styles/AddHotelPage.css'; // Подключаем стили
 
 const AddHotelPage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
@@ -23,7 +23,7 @@ const AddHotelPage: React.FC = () => {
           const data = response.data as { title: string; description: string; images: string[] };
           setTitle(data.title);
           setDescription(data.description);
-          setExistingImages(data.images || []);
+          setExistingImages(data.images.map(img => `http://localhost:3000/uploads/hotels/${img}`) || []);
         } catch (err) {
           setError('Ошибка при загрузке данных гостиницы');
         }
@@ -71,6 +71,8 @@ const AddHotelPage: React.FC = () => {
         setDescription('');
         setPreviewImages([]);
         setImages([]);
+        setExistingImages([]);
+        navigate('/admin/all-hotels');
       }
     } catch (err: any) {
       console.error("🔥 Ошибка при сохранении гостиницы:", err.response?.data || err);
@@ -96,11 +98,12 @@ const AddHotelPage: React.FC = () => {
   };
 
   return (
-    <div className="container">
-      <div className="hotel-card">
+    <div className="hotel-edit-container">
+      <div className="hotel-edit-form">
         <h2>{isEditMode ? 'Редактировать гостиницу' : 'Добавить гостиницу'}</h2>
         {error && <p className="error-message">{error}</p>}
         {success && <p className="success-message">{success}</p>}
+
         <form onSubmit={(e) => e.preventDefault()} className="hotel-form">
           <div className="form-group">
             <label>Название:</label>
@@ -110,6 +113,7 @@ const AddHotelPage: React.FC = () => {
             <label>Описание:</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="textarea-field" />
           </div>
+
           <div className="form-group">
             <label>Изображения:</label>
             <input type="file" multiple onChange={handleImageChange} />
@@ -128,8 +132,12 @@ const AddHotelPage: React.FC = () => {
               ))}
             </div>
           </div>
+
           <button type="button" onClick={handleSubmit} className="submit-button">
             {isEditMode ? 'Сохранить' : 'Добавить'}
+          </button>
+          <button type="button" onClick={() => navigate('/admin/all-hotels')} className="cancel-button">
+            Отменить
           </button>
         </form>
       </div>

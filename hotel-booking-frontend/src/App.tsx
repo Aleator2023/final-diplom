@@ -3,6 +3,7 @@ import LoginRegister from './pages/LoginRegister';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUsers from './pages/AdminUsers';
 import AddHotelPage from './pages/AddHotelPage';
+import EditHotelPage from './pages/EditHotelPage';
 import AllHotelsPage from './pages/AllHotelsPage';
 import RoomSearchPage from './pages/RoomSearchPage';
 import User from './pages/User';
@@ -18,12 +19,13 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/login" element={<LoginRegister />} />
-
+        
         <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="users/:id" element={<User />} />
           <Route path="add-hotel" element={<AddHotelPage />} />
+          <Route path="hotels/:id" element={<EditHotelPage />} />
           <Route path="all-hotels" element={<AllHotelsPage />} />
           <Route path="room-search" element={<RoomSearchPage />} />
         </Route>

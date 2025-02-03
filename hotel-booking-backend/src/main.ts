@@ -20,7 +20,16 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
 
   // Статический доступ к папке для загруженных изображений
-  app.useStaticAssets(path.join(__dirname, '..', 'uploads'));
+  app.useStaticAssets(path.join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads',
+  });
+
+  app.enableCors({
+    origin: 'http://localhost:5173', // ✅ Разрешаем фронтенду запрашивать файлы
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
+
 
   await app.listen(3000);
 }

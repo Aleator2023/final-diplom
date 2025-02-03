@@ -49,9 +49,9 @@ const AllHotelsPage: React.FC = () => {
             {hotel.images && hotel.images.length > 0 && <img src={hotel.images[0]} alt={hotel.title} className="hotel-image" />}
             <h3>{hotel.title}</h3>
             <p>{hotel.description}</p>
-            <Link to={`/hotels/edit/${hotel._id}`}>
-              <button className="edit-button">Редактировать</button>
-            </Link>
+            <Link to={`/admin/hotels/${hotel._id}`}>
+  <button className="edit-button">Редактировать</button>
+</Link>
             <button className="delete-button" onClick={() => deleteHotel(hotel._id)}>Удалить</button>
           </li>
         ))}

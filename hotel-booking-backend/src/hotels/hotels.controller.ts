@@ -39,15 +39,23 @@ export class HotelsController {
     @Body() data: Partial<Hotel>,
     @UploadedFiles() files: Array<Express.Multer.File>,
   ): Promise<Hotel> {
-    const images = files.map(file => `uploads/${file.filename}`); // Добавляем путь к файлам
+    const images = files.map(file => `uploads/hotels/${file.filename}`); // Добавляем путь к файлам
     return this.hotelsService.createHotel({ ...data, images });
   }
 
 
   @Get(':id')
-  async findHotelById(@Param('id') id: string): Promise<Hotel> {
-    return this.hotelsService.findById(id);
+async findHotelById(@Param('id') id: string): Promise<Hotel> {
+  const hotel = await this.hotelsService.findById(id);
+  if (!hotel) {
+    throw new NotFoundException('Гостиница не найдена');
   }
+
+  return {
+    ...hotel.toObject(),
+    images: hotel.images.map(img => `http://localhost:3000/${img}`), // ✅ Исправленный путь
+  };
+}
 
   @Get()
 async getAllHotels(): Promise<Hotel[]> {

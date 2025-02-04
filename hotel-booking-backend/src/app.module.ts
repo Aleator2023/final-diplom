@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { HotelsModule } from './hotels/hotels.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { SupportChatModule } from './support-chat/support-chat.module';
+import { HotelRoomsModule } from './hotel-rooms/hotel-rooms.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { SupportChatModule } from './support-chat/support-chat.module';
     HotelsModule,
     ReservationsModule,
     SupportChatModule,
+    HotelRoomsModule,
   ],
   controllers: [AppController, AuthController, UsersController],
   providers: [AppService],

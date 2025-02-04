@@ -12,6 +12,9 @@ import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 import AdminLayout from './components/AdminLayout';
 
+import HotelRoomsPage from './pages/HotelRoomsPage';
+import EditHotelRoomPage from './pages/EditHotelRoomPage';
+
 function App() {
   return (
     <Router>
@@ -22,10 +25,15 @@ function App() {
         
         <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
           <Route index element={<AdminDashboard />} />
+          <Route path="hotels/:hotelId/rooms" element={<HotelRoomsPage />} /> 
+          <Route path="hotels/:hotelId/add-room" element={<EditHotelRoomPage />} /> 
+          <Route path="hotels/:hotelId/edit-room/:roomId" element={<EditHotelRoomPage />} /> 
           <Route path="users" element={<AdminUsers />} />
           <Route path="users/:id" element={<User />} />
           <Route path="add-hotel" element={<AddHotelPage />} />
           <Route path="hotels/:id" element={<EditHotelPage />} />
+
+          
           <Route path="all-hotels" element={<AllHotelsPage />} />
           <Route path="room-search" element={<RoomSearchPage />} />
         </Route>

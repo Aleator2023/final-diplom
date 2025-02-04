@@ -1,10 +1,12 @@
 {
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
-    "@types/multer": "^1.4.12"
+    "@types/multer": "^1.4.12",
+    "@types/uuid": "^10.0.0"
   },
   "dependencies": {
     "@nestjs/config": "^4.0.0",
-    "class-transformer": "^0.5.1"
+    "class-transformer": "^0.5.1",
+    "uuid": "^11.0.5"
   }
 }

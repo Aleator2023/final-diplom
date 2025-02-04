@@ -23,11 +23,7 @@ const EditHotelPage: React.FC = () => {
         setDescription(data.description);
         
         // ✅ Преобразуем пути изображений, добавляя `/uploads/hotels/`
-        setExistingImages(
-          data.images && data.images.length > 0 
-            ? data.images.map(img => `http://localhost:3000/uploads/hotels/${img}`) 
-            : []
-        );
+        setExistingImages(data.images || []);
       } catch (err) {
         setError('Ошибка при загрузке данных гостиницы');
       }

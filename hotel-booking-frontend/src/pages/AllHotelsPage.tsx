@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 import '../styles/AllHotelsPage.css'; 
 
 const AllHotelsPage: React.FC = () => {
@@ -35,6 +38,15 @@ const AllHotelsPage: React.FC = () => {
     }
   };
 
+  const sliderSettings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    adaptiveHeight: true,
+  };
+
   return (
     <div className="hotels-container">
       <div className="hotels-header">
@@ -49,9 +61,17 @@ const AllHotelsPage: React.FC = () => {
       <div className="hotels-list">
         {hotels.map((hotel) => (
           <div key={hotel._id} className="hotel-card">
+            {/* Слайдер изображений */}
             {hotel.images && hotel.images.length > 0 && (
-              <img src={hotel.images[0]} alt={hotel.title} className="hotel-image" />
+              <Slider {...sliderSettings} className="hotel-slider">
+                {hotel.images.map((img, index) => (
+                  <div key={index}>
+                    <img src={img} alt={`hotel-${hotel._id}-${index}`} className="hotel-image" />
+                  </div>
+                ))}
+              </Slider>
             )}
+
             <div className="hotel-info">
               <h3>{hotel.title}</h3>
               <p>{hotel.description}</p>

@@ -53,31 +53,50 @@ async findHotelById(@Param('id') id: string): Promise<Hotel> {
 
   return {
     ...hotel.toObject(),
-    images: hotel.images.map(img => `http://localhost:3000/${img}`), // ✅ Исправленный путь
+    images: hotel.images
+      .filter(img => typeof img === 'string' && img.startsWith('uploads/hotels/'))
+      .map(img => `http://localhost:3000/${img}`),
   };
 }
 
-  @Get()
+@Get()
 async getAllHotels(): Promise<Hotel[]> {
   const hotels = await this.hotelsService.getAll();
   return hotels.map(hotel => ({
     ...hotel.toObject(),
-    images: hotel.images.map(img => `http://localhost:3000/${img}`), // Формируем полный путь
+    images: hotel.images
+      .filter(img => typeof img === 'string' && img.startsWith('uploads/hotels/'))
+      .map(img => `http://localhost:3000/${img}`),
   }));
 }
 
-  @Put(':id')
-  //@UseGuards(RolesGuard)
-  //@Roles('admin')
-  @UseInterceptors(FilesInterceptor('images', 10, multerOptions))
-  async updateHotel(
-    @Param('id') id: string,
-    @Body() data: UpdateHotelParams,
-    @UploadedFiles() files: Array<{ path: string }>
-  ): Promise<Hotel> {
-    const images = files.map(file => file.path);
-    return this.hotelsService.update(id, { ...data, images });
+@Put(':id')
+@UseInterceptors(FilesInterceptor('images', 10, multerOptions))
+async updateHotel(
+  @Param('id') id: string,
+  @Body() data: UpdateHotelParams,
+  @UploadedFiles() files: Express.Multer.File[],
+): Promise<Hotel> {
+  const hotel = await this.hotelsService.findById(id);
+  if (!hotel) {
+    throw new NotFoundException('Гостиница не найдена');
   }
+
+  // ✅ Гарантированно преобразуем `existingImages` в массив
+  let existingImages: string[] = [];
+  if (Array.isArray(data.existingImages)) {
+    existingImages = data.existingImages;
+  } else if (typeof data.existingImages === 'string') {
+    existingImages = JSON.parse(data.existingImages);
+  }
+
+  // ✅ Добавляем новые загруженные изображения
+  const newImages = files.map(file => `uploads/hotels/${file.filename}`);
+  const updatedImages = [...existingImages, ...newImages];
+
+  return this.hotelsService.update(id, { ...data, images: updatedImages });
+}
+
 
 
   @Delete(':id')

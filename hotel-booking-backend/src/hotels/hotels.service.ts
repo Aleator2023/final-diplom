@@ -36,9 +36,21 @@ export class HotelsService implements IHotelService, IHotelRoomService {
       throw new NotFoundException('Некорректный ID');
     }
   
-    const updatedHotel = await this.hotelModel
-      .findByIdAndUpdate(id, { ...data, images: data.images || [] }, { new: true })
-      .exec();
+    const existingHotel = await this.hotelModel.findById(id);
+    if (!existingHotel) {
+      throw new NotFoundException('Гостиница не найдена');
+    }
+  
+    // ✅ Используем старые изображения, если новых нет
+    const updatedImages = data.images && data.images.length > 0
+      ? data.images
+      : existingHotel.images;
+  
+    const updatedHotel = await this.hotelModel.findByIdAndUpdate(
+      id,
+      { ...data, images: updatedImages },
+      { new: true },
+    );
   
     if (!updatedHotel) {
       throw new NotFoundException('Гостиница не найдена');
@@ -46,7 +58,8 @@ export class HotelsService implements IHotelService, IHotelRoomService {
   
     return updatedHotel;
   }
-  
+ 
+
   async deleteHotel(id: string): Promise<void> {
     if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException('Некорректный ID');

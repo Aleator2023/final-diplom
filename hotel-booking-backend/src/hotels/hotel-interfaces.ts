@@ -16,6 +16,7 @@ export interface UpdateHotelParams {
   title?: string;       // Обновленное название гостиницы
   description?: string; // Обновленное описание гостиницы
   images?: string[];
+  existingImages?: string | string[]; 
 }
 
 // Интерфейс сервиса для работы с моделью Hotel

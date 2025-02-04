@@ -1,4 +1,4 @@
-/* Контейнер всей страницы */
+/* Общие стили для страницы */
 .hotels-container {
     width: 80%;
     margin: 20px auto;
@@ -7,28 +7,90 @@
     gap: 20px;
 }
 
-/* Заголовок и кнопка добавления */
+/* Заголовок + кнопка "Добавить гостиницу" */
 .hotels-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.add-button {
-    background: #007b8f;
-    color: white;
-    border: none;
+/* === УНИВЕРСАЛЬНЫЕ КНОПКИ === */
+button {
     padding: 10px 15px;
-    border-radius: 5px;
     font-size: 16px;
+    font-weight: bold;
+    border-radius: 5px;
+    border: none;
     cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+/* Кнопка "Сохранить" */
+.save-btn {
+    background: #28a745;
+    color: white;
+}
+
+.save-btn:hover {
+    background: #218838;
+}
+
+/* Кнопка "Отменить" */
+.cancel-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background: #c82333;
+}
+
+/* Кнопка "Добавить гостиницу" */
+.add-button {
+    background: #007bff;
+    color: white;
 }
 
 .add-button:hover {
-    background: #005f70;
+    background: #0056b3;
 }
 
-/* Контейнер списка гостиниц */
+/* Кнопка "Добавить номер" */
+.add-room-btn {
+    background: #007bff;
+    color: white;
+}
+
+.add-room-btn:hover {
+    background: #0056b3;
+}
+
+/* Кнопка "Редактировать" */
+.edit-button {
+    background: #ffc107;
+    color: black;
+}
+
+.edit-button:hover {
+    background: #e0a800;
+}
+
+/* Кнопка "Удалить" */
+.delete-button {
+    background: #dc3545;
+    color: white;
+}
+
+.delete-button:hover {
+    background: #c82333;
+}
+
+/* Эффект при нажатии на кнопку */
+button:active {
+    transform: scale(0.95);
+}
+
+/* === СТИЛИ ДЛЯ СПИСКА ГОСТИНИЦ === */
 .hotels-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -74,34 +136,6 @@
 .hotel-actions {
     display: flex;
     gap: 10px;
-}
-
-.edit-button {
-    background: #28a745;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 5px;
-    font-size: 14px;
-    cursor: pointer;
-}
-
-.edit-button:hover {
-    background: #218838;
-}
-
-.delete-button {
-    background: #dc3545;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 5px;
-    font-size: 14px;
-    cursor: pointer;
-}
-
-.delete-button:hover {
-    background: #c82333;
 }
 
 /* Сообщение об ошибке */

@@ -3,6 +3,7 @@ import {
   Get, 
   Post, 
   Put, 
+  Patch,
   Delete,
   Param, 
   Query, 
@@ -10,7 +11,8 @@ import {
   NotFoundException, 
   UseInterceptors, 
   UploadedFiles, 
-  UseGuards 
+  UseGuards,
+  InternalServerErrorException 
 } from '@nestjs/common';
 import { HotelsService } from './hotels.service';
 import { Hotel } from '../schemas/hotel.schema';
@@ -70,11 +72,11 @@ async getAllHotels(): Promise<Hotel[]> {
   }));
 }
 
-@Put(':id')
+@Patch(':id')
 @UseInterceptors(FilesInterceptor('images', 10, multerOptions))
 async updateHotel(
   @Param('id') id: string,
-  @Body() data: UpdateHotelParams,
+  @Body() data: Partial<UpdateHotelParams>, // 👈 Делаем поля необязательными
   @UploadedFiles() files: Express.Multer.File[],
 ): Promise<Hotel> {
   const hotel = await this.hotelsService.findById(id);
@@ -82,22 +84,42 @@ async updateHotel(
     throw new NotFoundException('Гостиница не найдена');
   }
 
-  // ✅ Гарантированно преобразуем `existingImages` в массив
-  let existingImages: string[] = [];
-  if (Array.isArray(data.existingImages)) {
-    existingImages = data.existingImages;
-  } else if (typeof data.existingImages === 'string') {
-    existingImages = JSON.parse(data.existingImages);
+  let existingImages: string[] = hotel.images || [];
+
+  try {
+    if (data.existingImages) {
+      if (typeof data.existingImages === 'string') {
+        existingImages = JSON.parse(data.existingImages);
+      } else if (Array.isArray(data.existingImages)) {
+        existingImages = data.existingImages;
+      }
+    }
+
+    if (!Array.isArray(existingImages)) {
+      throw new Error('existingImages должен быть массивом строк');
+    }
+  } catch (error) {
+    console.error("❌ Ошибка при обработке existingImages:", error);
+    throw new InternalServerErrorException('Ошибка при обработке существующих изображений');
   }
+
+  // ✅ Убираем `localhost:3000/` (если клиент всё-таки отправил ссылки с ним)
+  existingImages = existingImages.map(img => img.replace('http://localhost:3000/', ''));
 
   // ✅ Добавляем новые загруженные изображения
   const newImages = files.map(file => `uploads/hotels/${file.filename}`);
+
+  // ✅ Создаем финальный массив изображений (старые + новые)
   const updatedImages = [...existingImages, ...newImages];
 
-  return this.hotelsService.update(id, { ...data, images: updatedImages });
+  // ✅ Формируем обновленные данные (меняем только переданные поля)
+  const updatedData: Partial<Hotel> = {};
+  if (data.title) updatedData.title = data.title;
+  if (data.description) updatedData.description = data.description;
+  updatedData.images = updatedImages;
+
+  return this.hotelsService.update(id, updatedData);
 }
-
-
 
   @Delete(':id')
   //@UseGuards(RolesGuard)

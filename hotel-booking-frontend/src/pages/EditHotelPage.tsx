@@ -47,20 +47,23 @@ const EditHotelPage: React.FC = () => {
       }
   
       const formData = new FormData();
-      formData.append('title', title.trim());
-      formData.append('description', description);
+      if (title) formData.append('title', title.trim());
+      if (description) formData.append('description', description);
   
-      // ✅ Передаем существующие изображения
-      if (existingImages.length > 0) {
-        existingImages.forEach((img) => formData.append('existingImages[]', img));
-      }
+      // ✅ Отправляем `existingImages` в формате относительных путей (без "localhost:3000")
+      const sanitizedExistingImages = existingImages.map(img =>
+        img.replace('http://localhost:3000/', '') // 👈 Убираем localhost
+      );
+      formData.append('existingImages', JSON.stringify(sanitizedExistingImages));
   
       // ✅ Передаем новые изображения, если они есть
       if (images.length > 0) {
         images.forEach((image) => formData.append('images', image));
       }
   
-      const response = await axios.put(`http://localhost:3000/hotels/${id}`, formData, {
+      console.log("📤 Данные перед отправкой:", Object.fromEntries(formData.entries()));
+  
+      const response = await axios.patch(`http://localhost:3000/hotels/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
@@ -69,12 +72,11 @@ const EditHotelPage: React.FC = () => {
   
       if (response.status === 200) {
         setSuccess('Гостиница успешно обновлена');
-  
-        // ✅ Обновляем `existingImages` с сервера
         const data = response.data as { images: string[] };
-        setExistingImages(data.images);
   
-        // ✅ Очищаем временные изображения
+        // ✅ Обновляем `existingImages` после ответа сервера
+        setExistingImages(data.images.map(img => `http://localhost:3000/${img}`)); // 👈 Добавляем полный путь
+  
         setImages([]);
         setPreviewImages([]);
         navigate('/admin/all-hotels');
@@ -84,9 +86,7 @@ const EditHotelPage: React.FC = () => {
       setError(err.response?.data?.message || 'Ошибка при обновлении гостиницы');
     }
   };
-
- 
-
+    
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const files = Array.from(event.target.files);

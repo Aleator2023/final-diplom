@@ -10,6 +10,9 @@ export class HotelRoom extends Document {
   @Prop()
   description: string;
 
+  @Prop()
+  title: string;
+
   @Prop({ type: [String], default: [] })
   images: string[];
 

@@ -12,6 +12,7 @@ const BASE_URL = 'http://localhost:3000';
 
 interface AuthResponse {
   access_token: string;
+  id: string;
 }
 
 interface UserResponse {
@@ -59,13 +60,14 @@ const LoginRegister: React.FC = () => {
     setLoading(true);
 
     try {
-      const { access_token } = await axios.post<AuthResponse>(`${BASE_URL}/auth/login`, credentials).then(res => res.data);
+      const { access_token, id } = await axios.post<AuthResponse>(`${BASE_URL}/auth/login`, credentials).then(res => res.data);
 
       if (!access_token) {
         throw new Error('Invalid server response: no access token');
       }
 
       localStorage.setItem('token', access_token);
+      localStorage.setItem('userId', id);
 
       const user = await axios.get<UserResponse>(`${BASE_URL}/users/find-by-email`, {
         params: { email: credentials.email },

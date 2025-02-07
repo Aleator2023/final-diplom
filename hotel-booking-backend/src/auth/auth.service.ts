@@ -53,8 +53,10 @@ export class AuthService {
       sub: user._id,
       role: user.role,  // Добавляем роль пользователя в токен
     };
+
     return {
       access_token: this.jwtService.sign(payload),
+      id: user._id,
     };
   }
 }

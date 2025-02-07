@@ -10,7 +10,7 @@ export class Hotel extends Document {
   description: string;
 
   @Prop({ type: [String], default: [] })
-images: string[];
+  images: string[];
 }
 
 export const HotelSchema = SchemaFactory.createForClass(Hotel);

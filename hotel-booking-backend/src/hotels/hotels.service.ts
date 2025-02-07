@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Hotel } from '../schemas/hotel.schema';
@@ -23,6 +27,7 @@ export class HotelsService implements IHotelService, IHotelRoomService {
     try {
       const newHotel = new this.hotelModel({
         ...data,
+        createdBy: data._id,
         images: data.images || [],
       });
       return await newHotel.save();
@@ -31,45 +36,45 @@ export class HotelsService implements IHotelService, IHotelRoomService {
     }
   }
 
-async update(id: string, data: Partial<UpdateHotelParams>): Promise<Hotel> {
-  if (!Types.ObjectId.isValid(id)) {
-    throw new NotFoundException('Некорректный ID');
+  async update(id: string, data: Partial<UpdateHotelParams>): Promise<Hotel> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Некорректный ID');
+    }
+
+    const existingHotel = await this.hotelModel.findById(id);
+    if (!existingHotel) {
+      throw new NotFoundException('Гостиница не найдена');
+    }
+
+    // ✅ Используем старые изображения, если новых нет
+    const updatedImages =
+      data.images && data.images.length > 0
+        ? data.images
+        : existingHotel.images;
+
+    const updatedHotel = await this.hotelModel.findByIdAndUpdate(
+      id,
+      { ...data, images: updatedImages },
+      { new: true },
+    );
+
+    if (!updatedHotel) {
+      throw new NotFoundException('Гостиница не найдена');
+    }
+
+    return updatedHotel;
   }
-
-  const existingHotel = await this.hotelModel.findById(id);
-  if (!existingHotel) {
-    throw new NotFoundException('Гостиница не найдена');
-  }
-
-  // ✅ Используем старые изображения, если новых нет
-  const updatedImages = data.images && data.images.length > 0
-    ? data.images
-    : existingHotel.images;
-
-  const updatedHotel = await this.hotelModel.findByIdAndUpdate(
-    id,
-    { ...data, images: updatedImages },
-    { new: true },
-  );
-
-  if (!updatedHotel) {
-    throw new NotFoundException('Гостиница не найдена');
-  }
-
-  return updatedHotel;
-}
- 
 
   async deleteHotel(id: string): Promise<void> {
     if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException('Некорректный ID');
     }
-  
+
     const hotel = await this.hotelModel.findById(id);
     if (!hotel) {
       throw new NotFoundException('Гостиница не найдена');
     }
-  
+
     await this.hotelModel.deleteOne({ _id: id }).exec();
   }
 
@@ -77,7 +82,9 @@ async update(id: string, data: Partial<UpdateHotelParams>): Promise<Hotel> {
     try {
       return await this.hotelModel.find().exec();
     } catch (error) {
-      throw new InternalServerErrorException('Ошибка при получении списка гостиниц');
+      throw new InternalServerErrorException(
+        'Ошибка при получении списка гостиниц',
+      );
     }
   }
 
@@ -91,6 +98,18 @@ async update(id: string, data: Partial<UpdateHotelParams>): Promise<Hotel> {
       throw new NotFoundException('Hotel not found');
     }
     return hotel;
+  }
+
+  async findByCreatedBy(userId: string): Promise<Hotel[]> {
+    try {
+      const hotels = await this.hotelModel.find({ createdBy: userId });
+      return hotels;
+    } catch (error) {
+      console.error('Error in findByCreatedBy:', error);
+      throw new InternalServerErrorException(
+        'Failed to find hotels by user ID',
+      );
+    }
   }
 
   async search(params: SearchHotelParams): Promise<Hotel[]> {
@@ -107,13 +126,13 @@ async update(id: string, data: Partial<UpdateHotelParams>): Promise<Hotel> {
       throw new InternalServerErrorException('Error searching hotels');
     }
   }
-  
+
   async createRoom(data: Partial<HotelRoom>): Promise<HotelRoom> {
     try {
       const newRoom = new this.hotelRoomModel(data);
       return await newRoom.save();
     } catch (error) {
-      console.error("Error creating room:", error);
+      console.error('Error creating room:', error);
       throw new InternalServerErrorException('Error creating hotel room');
     }
   }
@@ -123,7 +142,9 @@ async update(id: string, data: Partial<UpdateHotelParams>): Promise<Hotel> {
       throw new NotFoundException('Invalid room ID');
     }
 
-    const room = await this.hotelRoomModel.findById(new Types.ObjectId(id)).exec();
+    const room = await this.hotelRoomModel
+      .findById(new Types.ObjectId(id))
+      .exec();
     if (!room) {
       throw new NotFoundException('Room not found');
     }
@@ -148,7 +169,10 @@ async update(id: string, data: Partial<UpdateHotelParams>): Promise<Hotel> {
     }
   }
 
-  async updateRoom(id: string, data: UpdateHotelRoomParams): Promise<HotelRoom> {
+  async updateRoom(
+    id: string,
+    data: UpdateHotelRoomParams,
+  ): Promise<HotelRoom> {
     if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException('Invalid room ID');
     }

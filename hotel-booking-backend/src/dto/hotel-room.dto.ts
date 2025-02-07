@@ -1,8 +1,17 @@
-import { IsString, IsBoolean, IsArray, IsMongoId, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsBoolean,
+  IsArray,
+  IsMongoId,
+  IsOptional,
+} from 'class-validator';
 
 export class CreateHotelRoomDto {
   @IsMongoId()
   hotelId: string;
+
+  @IsString()
+  title: string;
 
   @IsString()
   description: string;
@@ -14,12 +23,17 @@ export class CreateHotelRoomDto {
 
 export class UpdateHotelRoomDto {
   @IsString()
+  title: string;
+
+  @IsString()
   description: string;
 
-  @IsBoolean()
-  isEnabled: boolean;
+  @IsOptional()
+  isEnabled?: boolean | string;
 
-  @IsArray()
   @IsOptional()
   images?: string[];
+
+  @IsOptional()
+  existingImages?: string[];
 }

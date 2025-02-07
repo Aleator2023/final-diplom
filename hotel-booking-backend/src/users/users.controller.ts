@@ -13,11 +13,14 @@ import { UsersService } from './users.service';
 import { UserDocument } from '../schemas/user.schema';
 import { SearchUserParams } from './users.interface';
 import { CreateAdminDto } from '../dto/create-admin.dto';
-// import { AdminGuard } from '../auth/admin.guard';
+import { CreateManagerDto } from '../dto/create-manager.dto';
+
 
 @Controller('/users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post()
   async create(
@@ -46,6 +49,22 @@ export class UsersController {
       role: user.role,
     };
   }
+
+  @Post('/create-manager')
+  async createManager(@Body() createManagerDto: CreateManagerDto) {
+    const managerData: Partial<UserDocument> = {
+      ...createManagerDto,
+      role: 'manager',
+    };
+    const user = await this.usersService.create(managerData);
+    return {
+      id: user._id.toHexString(),
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    };
+  }
+
 
   @Get('find-by-email')
   async findByEmail(

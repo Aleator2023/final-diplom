@@ -1,9 +1,10 @@
 /* Контейнер всей страницы */
 .hotel-edit-container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   gap: 20px;
   justify-content: center;
+  align-items: center;
   padding: 20px;
 }
 
@@ -43,11 +44,21 @@
   font-size: 16px;
 }
 
+.image-slider-container {
+  margin-bottom: 40px;
+}
+
 /* Секция изображений */
 .image-upload-container {
   display: flex;
+  flex-direction: column;
   gap: 10px;
   margin-bottom: 15px;
+}
+
+.image-preview-wrapper {
+  display: flex;
+  gap: 10px;
 }
 
 .image-preview {

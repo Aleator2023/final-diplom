@@ -27,11 +27,14 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="hotels/:hotelId/rooms" element={<HotelRoomsPage />} /> 
           <Route path="hotels/:hotelId/add-room" element={<EditHotelRoomPage />} /> 
-          <Route path="hotels/:hotelId/edit-room/:roomId" element={<EditHotelRoomPage />} /> 
+          {/* <Route path="hotels/:hotelId" element={<EditHotelRoomPage />} />  */}
+          {/* <Route path="hotels/:id/rooms/new" element={<EditHotelRoomPage />} /> 
+          <Route path="hotels/:id/edit-room/:roomId" element={<EditHotelRoomPage />} />  */}
+          {/* <Route path="hotels/:hotelId/edit-room/:roomId" element={<EditHotelRoomPage />} />  */}
           <Route path="users" element={<AdminUsers />} />
           <Route path="users/:id" element={<User />} />
           <Route path="add-hotel" element={<AddHotelPage />} />
-          <Route path="hotels/:id" element={<EditHotelPage />} />
+          <Route path="hotels/:hotelId" element={<EditHotelPage />} />
 
           
           <Route path="all-hotels" element={<AllHotelsPage />} />

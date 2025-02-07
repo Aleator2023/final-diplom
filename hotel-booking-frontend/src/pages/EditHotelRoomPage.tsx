@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import '../styles/EditHotelRoomPage.css';
+import * as Antd from 'antd';
+const { Checkbox } = Antd;
 
 const EditHotelRoomPage: React.FC = () => {
   const { hotelId, roomId } = useParams<{ hotelId: string; roomId?: string }>(); // ID отеля и комнаты
   const navigate = useNavigate();
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
@@ -44,6 +47,7 @@ const EditHotelRoomPage: React.FC = () => {
       }
 
       const formData = new FormData();
+      formData.append('title', title);
       formData.append('description', description);
       formData.append('hotelId', hotelId || '');
       formData.append('isEnabled', String(isEnabled));
@@ -62,7 +66,8 @@ const EditHotelRoomPage: React.FC = () => {
 
       if (response.status === (isEditMode ? 200 : 201)) {
         setSuccess(isEditMode ? 'Номер успешно обновлён' : 'Номер успешно добавлен');
-        navigate(`/admin/hotels/${hotelId}/rooms`);
+        // navigate(`/admin/hotels/${hotelId}/rooms`);
+        location.reload();
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Ошибка при сохранении номера');
@@ -84,14 +89,16 @@ const EditHotelRoomPage: React.FC = () => {
       {success && <p className="success-message">{success}</p>}
 
       <div className="form-group">
+        <label>Название номера:</label>
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
+      </div>
+
+      <div className="form-group">
         <label>Описание:</label>
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
 
-      <div className="form-group">
-        <label>Доступность:</label>
-        <input type="checkbox" checked={isEnabled} onChange={(e) => setIsEnabled(e.target.checked)} />
-      </div>
+      <Checkbox checked={isEnabled} onChange={(e) => setIsEnabled(e.target.checked)} style={{ display: 'flex' }}>Доступность</Checkbox>
 
       <div className="image-upload-container">
         {existingImages.map((img, index) => (

@@ -5,7 +5,8 @@ import Typography  from 'antd/es/typography';
 import { ColumnsType } from 'antd/es/table';
 import { getUser } from '../services/api';
 
-const { Title } = Typography; // ✅ Теперь Title корректно импортируется
+const { Title } = Typography; 
+// ✅ Теперь Title корректно импортируется
 
 interface User {
   id: string;

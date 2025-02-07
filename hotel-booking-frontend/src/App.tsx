@@ -5,40 +5,47 @@ import AdminUsers from './pages/AdminUsers';
 import AddHotelPage from './pages/AddHotelPage';
 import EditHotelPage from './pages/EditHotelPage';
 import AllHotelsPage from './pages/AllHotelsPage';
-import RoomSearchPage from './pages/RoomSearchPage';
 import User from './pages/User';
 import Home from './pages/Home';
-import Dashboard from './pages/Dashboard';
+//import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
-import AdminLayout from './components/AdminLayout';
-
+import LayoutComponent from './components/Layout';
 import HotelRoomsPage from './pages/HotelRoomsPage';
 import EditHotelRoomPage from './pages/EditHotelRoomPage';
+import ClientBookings from './pages/ClientBookings';
+import ManagerBookings from './pages/ManagerBookings';
+import ChatClientSupport from './pages/ChatClientSupport';
+import ChatManagerClients from './pages/ChatManagerClients';
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/login" element={<LoginRegister />} />
-        
-        <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+
+        <Route path="/admin" element={<ProtectedRoute><LayoutComponent /></ProtectedRoute>}>
           <Route index element={<AdminDashboard />} />
-          <Route path="hotels/:hotelId/rooms" element={<HotelRoomsPage />} /> 
-          <Route path="hotels/:hotelId/add-room" element={<EditHotelRoomPage />} /> 
-          {/* <Route path="hotels/:hotelId" element={<EditHotelRoomPage />} />  */}
-          {/* <Route path="hotels/:id/rooms/new" element={<EditHotelRoomPage />} /> 
-          <Route path="hotels/:id/edit-room/:roomId" element={<EditHotelRoomPage />} />  */}
-          {/* <Route path="hotels/:hotelId/edit-room/:roomId" element={<EditHotelRoomPage />} />  */}
+          <Route path="hotels/:hotelId/rooms" element={<HotelRoomsPage />} />
+          <Route path="hotels/:hotelId/add-room" element={<EditHotelRoomPage />} />
+          
           <Route path="users" element={<AdminUsers />} />
           <Route path="users/:id" element={<User />} />
           <Route path="add-hotel" element={<AddHotelPage />} />
           <Route path="hotels/:hotelId" element={<EditHotelPage />} />
-
-          
           <Route path="all-hotels" element={<AllHotelsPage />} />
-          <Route path="room-search" element={<RoomSearchPage />} />
+        </Route>
+
+        <Route path="/client" element={<ProtectedRoute><LayoutComponent /></ProtectedRoute>}>
+          <Route path="all-hotels" element={<AllHotelsPage />} />
+          <Route path="my-bookings" element={<ClientBookings />} />
+          <Route path="chat-support" element={<ChatClientSupport />} />
+        </Route>
+
+        <Route path="/manager" element={<ProtectedRoute><LayoutComponent /></ProtectedRoute>}>
+          <Route path="all-hotels" element={<AllHotelsPage />} />
+          <Route path="bookings" element={<ManagerBookings />} />
+          <Route path="chat" element={<ChatManagerClients />} />
         </Route>
       </Routes>
     </Router>

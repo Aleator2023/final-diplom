@@ -1,0 +1,24 @@
+import {
+    WebSocketGateway,
+    WebSocketServer,
+    SubscribeMessage,
+    MessageBody,
+    ConnectedSocket,
+  } from '@nestjs/websockets';
+  import { Server, Socket } from 'socket.io';
+  import { SupportChatService } from './support-chat.service';
+  import { SendMessageDto } from './support-interfaces';
+  
+  @WebSocketGateway({ cors: { origin: '*' } }) // Разрешаем CORS
+  export class SupportChatGateway {
+    @WebSocketServer() server: Server;
+  
+    constructor(private readonly supportChatService: SupportChatService) {}
+  
+    @SubscribeMessage('sendMessage')
+    async handleSendMessage(@MessageBody() data: SendMessageDto, @ConnectedSocket() client: Socket) {
+      const message = await this.supportChatService.sendMessage(data);
+      this.server.emit('message', data.supportRequest, message);
+      return message;
+    }
+  }

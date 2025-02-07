@@ -4,6 +4,7 @@ import { SupportRequest, SupportRequestSchema } from '../schemas/support-request
 import { Message, MessageSchema } from '../schemas/message.schema';
 import { SupportChatService } from './support-chat.service';
 import { SupportChatController } from './support-chat.controller';
+import { SupportChatGateway } from './support-chat.gateway';
 
 @Module({
   imports: [
@@ -11,6 +12,6 @@ import { SupportChatController } from './support-chat.controller';
     MongooseModule.forFeature([{ name: Message.name, schema: MessageSchema }]),
   ],
   controllers: [SupportChatController],
-  providers: [SupportChatService],
+  providers: [SupportChatService, SupportChatGateway], // ✅ Добавили WebSocket-шлюз
 })
 export class SupportChatModule {}

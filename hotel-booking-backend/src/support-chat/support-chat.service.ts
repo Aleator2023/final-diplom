@@ -84,4 +84,15 @@ export class SupportChatService implements ISupportRequestService {
     this.eventEmitter.on('message', handler);
     return () => this.eventEmitter.off('message', handler);
   }
+
+  async clearMessages(supportRequestId: string): Promise<void> {
+    const supportRequest = await this.supportRequestModel.findById(supportRequestId);
+    if (!supportRequest) {
+      throw new NotFoundException('Чат не найден');
+    }
+  
+    supportRequest.messages = []; // Очистка массива сообщений
+    await supportRequest.save();
+  }
+
 }

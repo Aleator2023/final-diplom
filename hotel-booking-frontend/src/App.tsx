@@ -7,7 +7,6 @@ import EditHotelPage from './pages/EditHotelPage';
 import AllHotelsPage from './pages/AllHotelsPage';
 import User from './pages/User';
 import Home from './pages/Home';
-//import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 import LayoutComponent from './components/Layout';
 import HotelRoomsPage from './pages/HotelRoomsPage';

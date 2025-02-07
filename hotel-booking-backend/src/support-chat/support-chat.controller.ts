@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Delete, Patch } from '@nestjs/common';
 import { SupportChatService } from './support-chat.service';
 import { CreateSupportRequestDto, SendMessageDto, GetChatListParams } from './support-interfaces';
 
@@ -25,4 +25,11 @@ export class SupportChatController {
   async getMessages(@Param('supportRequestId') supportRequestId: string) {
     return this.supportChatService.getMessages(supportRequestId);
   }
+
+
+  @Delete(':supportRequestId/clear')
+  async clearChat(@Param('supportRequestId') supportRequestId: string) {
+    await this.supportChatService.clearMessages(supportRequestId);
+    return { message: 'Чат очищен' };
+ }
 }

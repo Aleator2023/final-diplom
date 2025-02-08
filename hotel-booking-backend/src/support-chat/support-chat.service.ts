@@ -95,4 +95,14 @@ export class SupportChatService implements ISupportRequestService {
     await supportRequest.save();
   }
 
+  async deleteChat(supportRequestId: string): Promise<void> {
+    const supportRequest = await this.supportRequestModel.findById(supportRequestId);
+    if (!supportRequest) {
+      throw new NotFoundException('Чат не найден');
+    }
+  
+    await this.messageModel.deleteMany({ _id: { $in: supportRequest.messages } }); // Удаляем сообщения чата
+    await this.supportRequestModel.findByIdAndDelete(supportRequestId); // Удаляем сам чат
+  }
+
 }

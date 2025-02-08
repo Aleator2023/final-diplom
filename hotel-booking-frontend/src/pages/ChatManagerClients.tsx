@@ -1,30 +1,45 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:3000/support-chat';
 const socket = io('http://localhost:3000', { transports: ['websocket', 'polling'] });
 
+interface User {
+  _id: string;
+  name?: string;
+  surname?: string;
+}
+
+interface Chat {
+  _id: string;
+  user: string;
+}
+
+interface Message {
+  author: string;
+  text: string;
+}
+
 const ChatManagerClients = () => {
-  const [chats, setChats] = useState([]);
-  const [selectedChat, setSelectedChat] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [message, setMessage] = useState('');
-  const [managerName, setManagerName] = useState('');
-  const [clients, setClients] = useState({});
-  const [selectedClientName, setSelectedClientName] = useState('');
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [message, setMessage] = useState<string>('');
+  const [managerName, setManagerName] = useState<string>('');
+  const [clients, setClients] = useState<Record<string, string>>({});
+  const [selectedClientName, setSelectedClientName] = useState<string>('');
 
   useEffect(() => {
     const fetchManager = async () => {
       const storedUserId = localStorage.getItem('userId');
       const storedToken = localStorage.getItem('token');
-
       if (storedUserId && storedToken) {
         try {
-          const { data } = await axios.get(`http://localhost:3000/users/${storedUserId}`, {
+          const response = await axios.get<User>(`http://localhost:3000/users/${storedUserId}`, {
             headers: { Authorization: `Bearer ${storedToken}` },
           });
-          setManagerName(`${data.name || ''} ${data.surname || ''}`.trim());
+          setManagerName(`${response.data.name || ''} ${response.data.surname || ''}`.trim());
         } catch (error) {
           console.error('Ошибка загрузки данных менеджера:', error);
         }
@@ -36,22 +51,22 @@ const ChatManagerClients = () => {
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        const { data } = await axios.get(API_BASE_URL);
-        setChats(data);
+        const response = await axios.get<Chat[]>(API_BASE_URL);
+        setChats(response.data);
 
         const clientData = await Promise.all(
-          data.map(async (chat) => {
+          response.data.map(async (chat) => {
             if (!chat.user) return { id: chat.user, name: 'Неизвестный пользователь' };
             try {
-              const response = await axios.get(`http://localhost:3000/users/${chat.user}`);
-              return { id: chat.user, name: `${response.data.name} ${response.data.surname}`.trim() };
+              const userResponse = await axios.get<User>(`http://localhost:3000/users/${chat.user}`);
+              return { id: chat.user, name: `${userResponse.data.name || ''} ${userResponse.data.surname || ''}`.trim() };
             } catch (error) {
               return { id: chat.user, name: 'Неизвестный пользователь' };
             }
           })
         );
 
-        const clientMap = {};
+        const clientMap: Record<string, string> = {};
         clientData.forEach(client => {
           if (client.id) {
             clientMap[client.id] = client.name;
@@ -67,25 +82,31 @@ const ChatManagerClients = () => {
 
   useEffect(() => {
     if (selectedChat) {
-      axios.get(`${API_BASE_URL}/${selectedChat}/messages`).then(({ data }) => setMessages(data));
+      axios.get<Message[]>(`${API_BASE_URL}/${selectedChat}/messages`).then((response) => setMessages(response.data));
       setSelectedClientName(clients[selectedChat] || 'Неизвестный пользователь');
     }
   }, [selectedChat, clients]);
 
   useEffect(() => {
-    socket.on('message', (supportRequest, newMessage) => {
+    const messageHandler = (supportRequest: { _id: string }, newMessage: Message) => {
       if (supportRequest._id === selectedChat) {
-        setMessages(prev => [...prev, newMessage]);
+        setMessages((prev) => [...prev, newMessage]);
       }
-    });
-    return () => socket.off('message');
+    };
+  
+    socket.on('message', messageHandler);
+  
+    // Возвращаем функцию очистки, чтобы убрать обработчик при размонтировании
+    return () => {
+      socket.off('message', messageHandler);
+    };
   }, [selectedChat]);
 
   const sendMessage = async () => {
     if (message.trim() && selectedChat) {
       try {
-        const newMessage = { author: managerName, text: message };
-        setMessages(prev => [...prev, newMessage]);
+        const newMessage: Message = { author: managerName, text: message };
+        setMessages((prev) => [...prev, newMessage]);
         await axios.post(`${API_BASE_URL}/${selectedChat}/messages`, newMessage);
         setMessage('');
       } catch (error) {
@@ -96,10 +117,9 @@ const ChatManagerClients = () => {
 
   const deleteChat = async () => {
     if (!selectedChat) return;
-
     try {
       await axios.delete(`${API_BASE_URL}/${selectedChat}`);
-      setChats(chats.filter(chat => chat._id !== selectedChat));
+      setChats((prev) => prev.filter(chat => chat._id !== selectedChat));
       setSelectedChat(null);
       setMessages([]);
     } catch (error) {

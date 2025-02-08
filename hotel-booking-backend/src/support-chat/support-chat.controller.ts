@@ -32,4 +32,10 @@ export class SupportChatController {
     await this.supportChatService.clearMessages(supportRequestId);
     return { message: 'Чат очищен' };
  }
+
+ @Delete(':supportRequestId')
+async deleteChat(@Param('supportRequestId') supportRequestId: string) {
+  await this.supportChatService.deleteChat(supportRequestId);
+  return { message: 'Чат удалён' };
+}
 }

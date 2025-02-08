@@ -112,26 +112,34 @@ const ChatManagerClients = () => {
   }, [selectedChat, clients]);
 
   useEffect(() => {
-    const messageHandler = (supportRequest: { _id: string }, newMessage: Message) => {
-      if (supportRequest._id === selectedChat) {
-        setMessages((prev) => [...prev, newMessage]);
+    const messageHandler = (data: { supportRequestId: string; newMessage: Message }) => {
+      if (data.supportRequestId === selectedChat) {
+        setMessages((prev) => [...prev, data.newMessage]);
       }
     };
+  
     socket.on('message', messageHandler);
+  
     return () => {
       socket.off('message', messageHandler);
     };
   }, [selectedChat]);
-
+  
   const sendMessage = async () => {
     if (message.trim() && selectedChat) {
       try {
         const newMessage: Message = { author: managerName, text: message };
+  
+        // Отправляем сообщение в WebSocket
+        socket.emit('sendMessage', { supportRequestId: selectedChat, message: newMessage });
+  
+        // Обновляем локально, чтобы сразу отображалось
         setMessages((prev) => [...prev, newMessage]);
+  
         await axios.post(`${API_BASE_URL}/${selectedChat}/messages`, newMessage);
         setMessage('');
       } catch (error) {
-        console.error('Ошибка при отправке сообщения:', error);
+        console.error("Ошибка при отправке сообщения:", error);
       }
     }
   };

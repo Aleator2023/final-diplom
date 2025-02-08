@@ -31,6 +31,9 @@ const ChatClientSupport = () => {
     const fetchUser = async () => {
       const storedUserId = localStorage.getItem('userId');
       const storedToken = localStorage.getItem('token');
+      
+      console.log("Текущий userId клиента:", storedUserId);
+      
       if (storedUserId && storedToken) {
         try {
           const response = await axios.get<User>(`http://localhost:3000/users/${storedUserId}`, {
@@ -47,14 +50,23 @@ const ChatClientSupport = () => {
 
   useEffect(() => {
     if (!userName) return;
+    
     const fetchChat = async () => {
+      const storedUserId = localStorage.getItem('userId');
+      if (!storedUserId) {
+        console.error("Ошибка: userId не найден в localStorage");
+        return;
+      }
+      
+      console.log("Создаём или получаем чат для userId:", storedUserId);
+      
       try {
-        const response = await axios.get<Chat[]>(`${API_BASE_URL}?user=123`);
+        const response = await axios.get<Chat[]>(`${API_BASE_URL}?user=${storedUserId}`);
         if (response.data.length > 0) {
           setChatId(response.data[0]._id);
           setMessages(response.data[0].messages);
         } else {
-          const newChatResponse = await axios.post<Chat>(API_BASE_URL, { user: '123', text: 'Начало чата', userName });
+          const newChatResponse = await axios.post<Chat>(API_BASE_URL, { user: storedUserId, text: 'Начало чата', userName });
           setChatId(newChatResponse.data._id);
           setMessages(newChatResponse.data.messages);
         }

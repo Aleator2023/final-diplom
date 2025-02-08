@@ -114,7 +114,13 @@ const ChatManagerClients = () => {
   useEffect(() => {
     const messageHandler = (data: { supportRequestId: string; newMessage: Message }) => {
       if (data.supportRequestId === selectedChat) {
-        setMessages((prev) => [...prev, data.newMessage]);
+        setMessages((prev) => {
+          // Если сообщение уже есть (добавленное локально), не дублируем
+          if (prev.some(msg => msg.text === data.newMessage.text && msg.author === data.newMessage.author)) {
+            return prev;
+          }
+          return [...prev, data.newMessage];
+        });
       }
     };
   
@@ -124,19 +130,20 @@ const ChatManagerClients = () => {
       socket.off('message', messageHandler);
     };
   }, [selectedChat]);
-  
   const sendMessage = async () => {
     if (message.trim() && selectedChat) {
       try {
         const newMessage: Message = { author: managerName, text: message };
   
+        // Локально добавляем сообщение сразу после отправки
+        setMessages((prev) => [...prev, newMessage]);
+  
         // Отправляем сообщение в WebSocket
         socket.emit('sendMessage', { supportRequestId: selectedChat, message: newMessage });
   
-        // Обновляем локально, чтобы сразу отображалось
-        setMessages((prev) => [...prev, newMessage]);
-  
+        // Отправляем сообщение в базу
         await axios.post(`${API_BASE_URL}/${selectedChat}/messages`, newMessage);
+  
         setMessage('');
       } catch (error) {
         console.error("Ошибка при отправке сообщения:", error);

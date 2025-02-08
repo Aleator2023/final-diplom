@@ -80,28 +80,25 @@ const ChatClientSupport = () => {
   useEffect(() => {
     const messageHandler = (data: { supportRequestId: string; newMessage: Message }) => {
       if (data.supportRequestId === chatId) {
-        setMessages((prev) => [...prev, data.newMessage]);
+        setMessages((prev) => {
+          if (prev.some(msg => msg.text === data.newMessage.text && msg.author === data.newMessage.author)) {
+            return prev;
+          }
+          return [...prev, data.newMessage];
+        });
       }
     };
-  
     socket.on('message', messageHandler);
-    
     return () => {
       socket.off('message', messageHandler);
     };
-  }, [chatId]);
-  
+  }, [chatId, userName]);
   const sendMessage = async () => {
     if (message.trim() && chatId) {
       try {
         const newMessage: Message = { author: userName, text: message };
-  
-        // Отправляем сообщение в WebSocket
-        socket.emit('sendMessage', { supportRequestId: chatId, message: newMessage });
-  
-        // Обновляем локально, чтобы сразу отображалось
         setMessages((prev) => [...prev, newMessage]);
-  
+        socket.emit('sendMessage', { supportRequestId: chatId, message: newMessage });
         await axios.post(`${API_BASE_URL}/${chatId}/messages`, newMessage);
         setMessage('');
       } catch (error) {

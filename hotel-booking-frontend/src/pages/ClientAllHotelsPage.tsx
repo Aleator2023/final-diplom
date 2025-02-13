@@ -124,7 +124,7 @@ const ClientAllHotelsPage: React.FC = () => {
               <p>{hotel.description}</p>
             </div>
             <div className="hotel-actions">
-              <Link to={`/admin/hotels/${hotel._id}`}>
+              <Link to={`/client/hotels/${hotel._id}`}>
                 <button className="edit-button">Забронировать</button>
               </Link>
             </div>

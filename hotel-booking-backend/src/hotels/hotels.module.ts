@@ -14,5 +14,6 @@ import { HotelRoom, HotelRoomSchema } from '../schemas/hotel-room.schema';
   ],
   controllers: [HotelsController],
   providers: [HotelsService],
+  exports: [MongooseModule], // ✅ Теперь HotelModel доступен в других модулях!
 })
 export class HotelsModule {}

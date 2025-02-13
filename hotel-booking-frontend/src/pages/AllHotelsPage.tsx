@@ -5,21 +5,38 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import '../styles/AllHotelsPage.css'; 
+import * as Antd from 'antd';
+const { Input } = Antd;
+const { Search } = Input;
+import type { GetProps } from 'antd';
+import { getHotels } from '../services/api';
+
+type SearchProps = GetProps<typeof Input.Search>;
 
 const AllHotelsPage: React.FC = () => {
   const [hotels, setHotels] = useState<{ _id: string; title: string; description: string; images?: string[] }[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const fetchHotels = async (search?: string) => {
+    try {
+      const response = await getHotels(search);
+      
+      setHotels(response.map(item => {
+        return {
+          _id: item._id,
+          title: item.title,
+          description: item.description,
+          images: item.images,
+        }
+      }));
+    } catch (err) {
+      console.error('Ошибка при загрузке гостиниц:', err);
+      setError('Ошибка при загрузке гостиниц');
+    }
+  };
 
   useEffect(() => {
-    const fetchHotels = async () => {
-      try {
-        const response = await axios.get<{ _id: string; title: string; description: string; images?: string[] }[]>('http://localhost:3000/hotels');
-        setHotels(response.data);
-      } catch (err) {
-        console.error('Ошибка при загрузке гостиниц:', err);
-        setError('Ошибка при загрузке гостиниц');
-      }
-    };
     fetchHotels();
   }, []);
 
@@ -47,8 +64,25 @@ const AllHotelsPage: React.FC = () => {
     adaptiveHeight: true,
   };
 
+  const handleFetchHotels = async (search?: string) => {
+    try {
+      setLoading(true);
+      fetchHotels(search);
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onSearch: SearchProps['onSearch'] = (value: string) => {
+    handleFetchHotels(value);
+  };
+
   return (
     <div className="hotels-container">
+      <Search placeholder="Введите имя гостиницы" onSearch={onSearch} style={{ width: 400, marginBottom: 20 }} size="large" />
+
       <div className="hotels-header">
         <h1>Список гостиниц</h1>
         <Link to="/admin/add-hotel">

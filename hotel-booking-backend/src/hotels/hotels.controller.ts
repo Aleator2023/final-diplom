@@ -63,8 +63,8 @@ export class HotelsController {
   }
 
   @Get()
-  async getAllHotels(): Promise<Hotel[]> {
-    const hotels = await this.hotelsService.getAll();
+  async getAllHotels(@Query() query: SearchHotelParams): Promise<Hotel[]> {
+    const hotels = await this.hotelsService.getAll(query);
     return hotels.map((hotel) => ({
       ...hotel.toObject(),
       images: hotel.images

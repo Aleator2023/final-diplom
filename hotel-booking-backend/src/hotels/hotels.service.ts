@@ -78,10 +78,21 @@ export class HotelsService implements IHotelService, IHotelRoomService {
     await this.hotelModel.deleteOne({ _id: id }).exec();
   }
 
-  async getAll(): Promise<Hotel[]> {
+  async getAll(params: SearchHotelParams): Promise<Hotel[]> {
     try {
-      return await this.hotelModel.find().exec();
+      const hotels = await this.hotelModel.find().exec();
+
+      if (params.title) {
+        return await this.hotelModel
+          .find({ title: { $regex: params.title, $options: 'i' } })
+          .skip(params.offset)
+          .limit(params.limit)
+          .exec();
+      } else {
+        return hotels;
+      }
     } catch (error) {
+      console.error(error);
       throw new InternalServerErrorException(
         'Ошибка при получении списка гостиниц',
       );

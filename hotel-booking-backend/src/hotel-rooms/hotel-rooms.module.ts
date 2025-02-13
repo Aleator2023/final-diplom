@@ -1,16 +1,21 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { HotelRoom, HotelRoomSchema } from '../schemas/hotel-room.schema';
-import { Hotel, HotelSchema } from '../schemas/hotel.schema';
-import { HotelRoomsController } from './hotel-rooms.controller';
-import { HotelRoomsService } from './hotel-rooms.service';
+import { HotelsAvailabilityService } from './hotels-availability.service';
+import { HotelsAvailabilityController } from './hotelsAvailability.controller';
+import { Reservation, ReservationSchema } from '../schemas/reservation.schema';
+import { HotelsModule } from '../hotels/hotels.module'; // ✅ Импортируем HotelsModule
+import { ReservationsModule } from '../reservations/reservations.module'; 
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: HotelRoom.name, schema: HotelRoomSchema }]),
-    MongooseModule.forFeature([{ name: Hotel.name, schema: HotelSchema }]),
+    MongooseModule.forFeature([
+      { name: Reservation.name, schema: ReservationSchema },
+    ]),
+    ReservationsModule,
+    HotelsModule, // ✅ Добавлено, чтобы HotelModel был доступен
   ],
-  controllers: [HotelRoomsController],
-  providers: [HotelRoomsService],
+  controllers: [HotelsAvailabilityController],
+  providers: [HotelsAvailabilityService],
+  exports: [HotelsAvailabilityService],
 })
 export class HotelRoomsModule {}

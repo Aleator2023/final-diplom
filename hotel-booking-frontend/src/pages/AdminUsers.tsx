@@ -4,7 +4,7 @@ const { Table, Input, Modal, Popconfirm, Button } = Antd;
 const { Search } = Input;
 import type { GetProps } from 'antd';
 import { Link } from 'react-router-dom';
-import { getUsers, deleteUser } from '../services/api'; 
+import { getUsers, deleteUser } from '../services/api';
 import { DeleteOutlined } from '@ant-design/icons';
 
 interface User {

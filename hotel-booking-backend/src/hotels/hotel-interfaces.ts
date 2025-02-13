@@ -9,6 +9,8 @@ export interface SearchHotelParams {
   limit: number;       // Максимальное количество записей для возврата
   offset: number;      // Количество записей для пропуска (для постраничной загрузки)
   title?: string;      // Название гостиницы для частичного поиска
+  checkIn?: string;
+  checkOut?: string;
 }
 
 // Интерфейс для параметров обновления гостиницы

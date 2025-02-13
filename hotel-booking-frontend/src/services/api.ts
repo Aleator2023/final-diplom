@@ -2,6 +2,23 @@ import axios from 'axios';
 
 const BASE_URL = 'http://localhost:3000'; // Базовый URL API
 
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  contactPhone: string;
+  role: string;
+}
+
+interface Hotel {
+  _id: string;
+  createdAt: string;
+  updatedAt: string;
+  images: string[];
+  description: string;
+  title: string;
+}
+
 const makeApiRequest = async <T>(url: string, config: any = {}): Promise<T> => {
   const token = localStorage.getItem('token');
 
@@ -27,6 +44,16 @@ const makeApiRequest = async <T>(url: string, config: any = {}): Promise<T> => {
       throw new Error(`Failed to fetch data from ${url}: ` + error.response?.data?.message);
     }
   }
+};
+
+export const getHotels = async (search?: string, checkIn?: Date | null, checkOut?: Date | null) => {
+  let params = new URLSearchParams();
+  if (search) params.append('search', search);
+  if (checkIn) params.append('checkIn', checkIn.toISOString()); // Преобразуем дату в ISO формат
+  if (checkOut) params.append('checkOut', checkOut.toISOString()); // Преобразуем дату в ISO формат
+
+  const response = await axios.get(`http://localhost:3000/available-hotels?${params.toString()}`); // Измененный URL
+  return response.data;
 };
 
 export const getUsers = async (search?: string): Promise<User[]> => {
@@ -66,12 +93,3 @@ export const deleteUser = async (id: string): Promise<void> => {
     }
   }
 };
-
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  contactPhone: string;
-  role: string;
-}

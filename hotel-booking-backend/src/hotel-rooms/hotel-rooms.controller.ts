@@ -23,14 +23,21 @@ import { multerOptions } from '../config/multer.config';
 export class HotelRoomsController {
   constructor(private readonly hotelRoomsService: HotelRoomsService) {}
 
-  @Post()
+  @Post(':hotelId')
   @UseInterceptors(FilesInterceptor('images', 10, multerOptions))
   async createHotelRoom(
+    @Param('hotelId') hotelId: string,
     @Body() createHotelRoomDto: CreateHotelRoomDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
+    console.log("hotelId получен:", hotelId);
+
+    if (!hotelId) {
+      throw new NotFoundException('hotelId отсутствует!');
+    }
+
     const images = files.map((file) => `uploads/hotels/${file.filename}`);
-    return this.hotelRoomsService.create({ ...createHotelRoomDto, images });
+    return this.hotelRoomsService.create({ ...createHotelRoomDto, hotelId, images });
   }
 
   @Put(':id')
@@ -46,12 +53,7 @@ export class HotelRoomsController {
 
   @Delete(':id')
   async deleteHotelRoom(@Param('id') id: string) {
-    try {
-      await this.hotelRoomsService.delete(id);
-
-      return { message: 'Hotel-room deleted successfully' };
-    } catch (error) {
-      throw new NotFoundException('Hotel-room not found', error);
-    }
+    await this.hotelRoomsService.delete(id);
+    return { message: 'Номер успешно удалён' };
   }
 }

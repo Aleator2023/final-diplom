@@ -3,11 +3,15 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import '../styles/EditHotelRoomPage.css';
 import * as Antd from 'antd';
+
 const { Checkbox } = Antd;
 
 const EditHotelRoomPage: React.FC = () => {
-  const { hotelId, roomId } = useParams<{ hotelId: string; roomId?: string }>(); // ID отеля и комнаты
+  const params = useParams();
+  const hotelId = params.hotelId;
+  const roomId = params.roomId;
   const navigate = useNavigate();
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<File[]>([]);
@@ -22,8 +26,11 @@ const EditHotelRoomPage: React.FC = () => {
     if (isEditMode) {
       const fetchRoom = async () => {
         try {
+          console.log("Запрос данных номера:", `http://localhost:3000/api/admin/hotel-rooms/${roomId}`);
           const response = await axios.get(`http://localhost:3000/api/admin/hotel-rooms/${roomId}`);
-          const data = response.data as { description: string; isEnabled: boolean; images: string[] };
+          const data = response.data as { title: string; description: string; isEnabled: boolean; images: string[] };
+          
+          setTitle(data.title);
           setDescription(data.description);
           setIsEnabled(data.isEnabled);
           setExistingImages(data.images || []);
@@ -39,35 +46,46 @@ const EditHotelRoomPage: React.FC = () => {
     try {
       setError(null);
       setSuccess(null);
-
+  
+      if (!hotelId) {
+        setError('Ошибка: hotelId отсутствует!');
+        return;
+      }
+  
       const token = localStorage.getItem('token');
       if (!token) {
         setError('Вы не авторизованы!');
         return;
       }
-
+  
       const formData = new FormData();
       formData.append('title', title);
       formData.append('description', description);
-      formData.append('hotelId', hotelId || '');
+      formData.append('hotelId', hotelId);
       formData.append('isEnabled', String(isEnabled));
+  
+      // ✅ Исправляем existingImages (преобразуем в JSON, чтобы избежать строкового представления)
+      existingImages.forEach((image) => formData.append('existingImages', image));
+  
+      // ✅ Добавляем новые изображения
       images.forEach((image) => formData.append('images', image));
-
+  
+      console.log("📤 Отправка данных:", Object.fromEntries(formData.entries()));
+  
       let response;
       if (isEditMode) {
         response = await axios.put(`http://localhost:3000/api/admin/hotel-rooms/${roomId}`, formData, {
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
         });
       } else {
-        response = await axios.post(`http://localhost:3000/api/admin/hotel-rooms`, formData, {
+        response = await axios.post(`http://localhost:3000/api/admin/hotel-rooms/${hotelId}`, formData, {
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
         });
       }
-
+  
       if (response.status === (isEditMode ? 200 : 201)) {
         setSuccess(isEditMode ? 'Номер успешно обновлён' : 'Номер успешно добавлен');
-        // navigate(`/admin/hotels/${hotelId}/rooms`);
-        location.reload();
+        navigate(`/admin/hotels/${hotelId}/rooms`);
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Ошибка при сохранении номера');
@@ -98,7 +116,7 @@ const EditHotelRoomPage: React.FC = () => {
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
 
-      <Checkbox checked={isEnabled} onChange={(e) => setIsEnabled(e.target.checked)} style={{ display: 'flex' }}>Доступность</Checkbox>
+      <Checkbox checked={isEnabled} onChange={(e) => setIsEnabled(e.target.checked)}>Доступность</Checkbox>
 
       <div className="image-upload-container">
         {existingImages.map((img, index) => (

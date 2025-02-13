@@ -22,16 +22,18 @@ const ClientAllHotelsPage: React.FC = () => {
 
   const fetchHotels = async (search?: string, checkIn?: Date | null, checkOut?: Date | null) => {
     try {
-      const response = await getHotels(search, checkIn, checkOut);
-
-      setHotels(response.map((item: any) => {
-        return {
-          _id: item._id,
-          title: item.title,
-          description: item.description,
-          images: item.images,
-        }
-      }));
+      const response = search || checkIn || checkOut 
+        ? await getHotels(search, checkIn, checkOut) 
+        : await axios.get<{ _id: string; title: string; description: string; images?: string[] }[]>('http://localhost:3000/hotels');
+  
+      const hotelsData = Array.isArray(response) ? response : response.data; // Проверка структуры ответа
+  
+      setHotels(hotelsData.map(item => ({
+        _id: item._id,
+        title: item.title,
+        description: item.description,
+        images: item.images && item.images.length > 0 ? item.images : ['/default-hotel-image.jpg'], // Добавлена проверка
+      })));
     } catch (err) {
       console.error('Ошибка при загрузке гостиниц:', err);
       setError('Ошибка при загрузке гостиниц');
@@ -99,13 +101,6 @@ const ClientAllHotelsPage: React.FC = () => {
       <div className='search-container'>
         <Search placeholder="Введите имя гостиницы" onSearch={onSearch} style={{ width: 400 }} size="large" />
         <RangePicker format="DD/MM/YYYY" placeholder={['Дата заезда', 'Дата выезда']} size='large' onChange={changeDates} />
-      </div>
-
-      <div className="hotels-header">
-        <h1>Список гостиниц</h1>
-        <Link to="/admin/add-hotel">
-          <button className="add-button">Добавить гостиницу</button>
-        </Link>
       </div>
 
       {error && <p className="error-message">{error}</p>}

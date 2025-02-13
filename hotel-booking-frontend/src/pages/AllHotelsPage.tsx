@@ -7,36 +7,35 @@ import "slick-carousel/slick/slick-theme.css";
 import '../styles/AllHotelsPage.css'; 
 import * as Antd from 'antd';
 const { Input } = Antd;
-const { Search } = Input;
-import type { GetProps } from 'antd';
+const Search = Antd.Input.Search;  // Изменение здесь
 import { getHotels } from '../services/api';
-
-type SearchProps = GetProps<typeof Input.Search>;
 
 const AllHotelsPage: React.FC = () => {
   const [hotels, setHotels] = useState<{ _id: string; title: string; description: string; images?: string[] }[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const fetchHotels = async (search?: string) => {
-    try {
-      const response = await getHotels(search);
-      
-      setHotels(response.map(item => {
-        return {
+  useEffect(() => {
+    const fetchHotels = async (search?: string) => {
+      try {
+        const response = search 
+          ? await getHotels(search) 
+          : await axios.get<{ _id: string; title: string; description: string; images?: string[] }[]>('http://localhost:3000/hotels');
+  
+        const hotelsData = Array.isArray(response) ? response : response.data; // Проверка структуры ответа
+  
+        setHotels(hotelsData.map(item => ({
           _id: item._id,
           title: item.title,
           description: item.description,
-          images: item.images,
-        }
-      }));
-    } catch (err) {
-      console.error('Ошибка при загрузке гостиниц:', err);
-      setError('Ошибка при загрузке гостиниц');
-    }
-  };
-
-  useEffect(() => {
+          images: item.images && item.images.length > 0 ? item.images : ['/default-hotel-image.jpg'],
+        })));
+      } catch (err) {
+        console.error('Ошибка при загрузке гостиниц:', err);
+        setError('Ошибка при загрузке гостиниц');
+      }
+    };
+  
     fetchHotels();
   }, []);
 
@@ -75,13 +74,18 @@ const AllHotelsPage: React.FC = () => {
     }
   };
 
-  const onSearch: SearchProps['onSearch'] = (value: string) => {
+  const onSearch = (value: string) => {
     handleFetchHotels(value);
   };
 
   return (
     <div className="hotels-container">
-      <Search placeholder="Введите имя гостиницы" onSearch={onSearch} style={{ width: 400, marginBottom: 20 }} size="large" />
+      <Search 
+        placeholder="Введите имя гостиницы" 
+        onSearch={onSearch} 
+        style={{ width: 400, marginBottom: 20 }} 
+        size="large" 
+      />
 
       <div className="hotels-header">
         <h1>Список гостиниц</h1>

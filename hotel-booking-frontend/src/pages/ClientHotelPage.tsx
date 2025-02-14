@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
@@ -23,14 +23,15 @@ interface HotelRoom {
 
 const ClientHotelPage: React.FC = () => {
   const { hotelId } = useParams();
+  const navigate = useNavigate();
   const [hotel, setHotel] = useState<Hotel | null>(null);
   const [rooms, setRooms] = useState<HotelRoom[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!hotelId) return;
-    
+    if (!hotelId) return; // Проверка, чтобы избежать лишних запросов
+
     console.log("🔍 Проверяем hotelId:", hotelId);
 
     const fetchHotelData = async () => {
@@ -42,10 +43,10 @@ const ClientHotelPage: React.FC = () => {
         setHotel(hotelResponse.data);
 
         // 2️⃣ Запрашиваем номера
-        const roomsResponse = await axios.get(`http://localhost:3000/hotels/${hotelId}/rooms`);
+        const roomsResponse = await axios.get<HotelRoom[]>(`http://localhost:3000/hotels/${hotelId}/rooms`);
 
-        // 3️⃣ Исправляем URL изображений номеров
-        const roomsWithFullImages = (roomsResponse.data as HotelRoom[]).map((room: HotelRoom) => ({
+        // 3️⃣ Добавляем полный путь к картинкам
+        const roomsWithFullImages = roomsResponse.data.map((room) => ({
           ...room,
           images: room.images?.map(img => img.startsWith('http') ? img : `http://localhost:3000/${img}`) || [],
         }));
@@ -53,11 +54,7 @@ const ClientHotelPage: React.FC = () => {
         setRooms(roomsWithFullImages);
       } catch (err: any) {
         console.error('❌ Ошибка при загрузке данных:', err);
-        if (err.response?.status === 404) {
-          setError('Данные не найдены');
-        } else {
-          setError(err.response?.data?.message || 'Ошибка при загрузке данных');
-        }
+        setError(err.response?.data?.message || 'Ошибка при загрузке данных');
       } finally {
         setLoading(false);
       }
@@ -65,6 +62,10 @@ const ClientHotelPage: React.FC = () => {
 
     fetchHotelData();
   }, [hotelId]);
+
+  const handleBookingClick = (roomId: string) => {
+    navigate(`/client/book-room/${roomId}`); // ✅ Исправленный путь
+  };
 
   const sliderSettings = {
     dots: true,
@@ -115,7 +116,9 @@ const ClientHotelPage: React.FC = () => {
               <h3>{room.title}</h3>
               <p>{room.description}</p>
               <p className="room-price">Цена: {room.price}₽</p>
-              <button className="book-button">Забронировать</button>
+              <button className="book-button" onClick={() => handleBookingClick(room._id)}>
+                Забронировать
+              </button>
             </div>
           ))
         ) : (

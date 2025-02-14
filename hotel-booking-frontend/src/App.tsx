@@ -17,6 +17,7 @@ import ClientBookings from './pages/ClientBookings';
 import ManagerBookings from './pages/ManagerBookings';
 import ChatClientSupport from './pages/ChatClientSupport';
 import ChatManagerClients from './pages/ChatManagerClients';
+import ClientProcessBooking from './pages/ClientProcessBooking';
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
           <Route path="hotels/:hotelId/" element={<ClientHotelPage />} />
           <Route path="my-bookings" element={<ClientBookings />} />
           <Route path="chat-support" element={<ChatClientSupport />} />
+          <Route path="book-room/:roomId" element={<ClientProcessBooking />} />
         </Route>
 
         <Route path="/manager" element={<ProtectedRoute><LayoutComponent /></ProtectedRoute>}>

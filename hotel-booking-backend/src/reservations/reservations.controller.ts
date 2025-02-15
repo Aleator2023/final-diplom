@@ -10,6 +10,7 @@ export class ReservationsController {
   // Создание нового бронирования
   @Post()
   async addReservation(@Body() data: ReservationDto): Promise<Reservation> {
+    console.log("📥 Получены данные для бронирования:", data);
     return this.reservationsService.addReservation(data);
   }
 
@@ -22,6 +23,7 @@ export class ReservationsController {
   // Получение списка бронирований с фильтрацией
   @Get()
   async getReservations(@Query() filter: ReservationSearchOptions): Promise<Array<Reservation>> {
+    console.log("🔍 Фильтр userId:", filter.userId); // Логируем userId, который пришел с фронта
     return this.reservationsService.getReservations(filter);
   }
 }

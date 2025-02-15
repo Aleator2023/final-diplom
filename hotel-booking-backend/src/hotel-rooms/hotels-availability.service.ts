@@ -29,7 +29,7 @@ export class HotelsAvailabilityService {
           .exec();
 
         const bookedRoomIds = new Set(
-          bookedRooms.map((reservation) => reservation.roomId),
+          bookedRooms.map((reservation) => reservation.room),
         );
 
         return hotels.filter((hotel) => {

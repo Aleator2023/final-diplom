@@ -3,7 +3,7 @@ import axios from 'axios';
 
 interface Booking {
   _id: string;
-  userId: string;
+  user: { name: string; surname?: string };
   hotel?: { _id: string; title: string } | null;
   room?: { _id: string; title: string } | null;
   dateStart: string;
@@ -22,7 +22,13 @@ const ManagerBookings: React.FC = () => {
   const fetchBookings = async () => {
     try {
       const response = await axios.get<Booking[]>('http://localhost:3000/reservations');
-      setBookings(response.data);
+      const normalizedBookings = response.data.map((booking) => ({
+        ...booking,
+        _id: booking.id, // ✅ Присваиваем `id` в `_id`
+      }));
+  
+      console.log("📥 Загруженные бронирования:", normalizedBookings);
+      setBookings(normalizedBookings); 
     } catch (err) {
       console.error('Ошибка при загрузке бронирований:', err);
       setError('Не удалось загрузить бронирования.');
@@ -56,10 +62,13 @@ const ManagerBookings: React.FC = () => {
                 <h3>{booking.hotel.title} - {booking.room.title}</h3>
                 <p>Дата заезда: {new Date(booking.dateStart).toLocaleDateString()}</p>
                 <p>Дата выезда: {new Date(booking.dateEnd).toLocaleDateString()}</p>
-                <p>Клиент ID: {booking.userId}</p>
-                <button className="delete-button" onClick={() => handleDelete(booking._id)}>
-                  Удалить бронирование
-                </button>
+                <p>Клиент ID: {booking.user.name}</p>
+                <button className="delete-button" onClick={() => {
+  console.log(`🗑 Нажата кнопка удаления для бронирования ID:`, booking._id);
+  handleDelete(booking._id);
+}}>
+  Удалить
+</button>
               </>
             ) : (
               <p className="error-message">Ошибка: данные бронирования повреждены.</p>

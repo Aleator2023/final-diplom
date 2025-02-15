@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { UserDocument } from '../schemas/user.schema';
 import { Reservation } from '../schemas/reservation.schema';
 import { ReservationDto, ReservationSearchOptions, IReservation } from './reservation-interfaces';
 
@@ -57,7 +58,8 @@ export class ReservationsService implements IReservation {
   }
 
   // Метод для получения бронирований с фильтрацией по параметрам
-  async getReservations(filter?: ReservationSearchOptions): Promise<Array<Reservation>> {
+
+  async getReservations(filter?: ReservationSearchOptions): Promise<Array<any>> {
     try {
       const query = this.reservationModel.find();
   
@@ -65,7 +67,7 @@ export class ReservationsService implements IReservation {
         if (!Types.ObjectId.isValid(filter.userId)) {
           throw new NotFoundException('Некорректный userId');
         }
-        query.where('userId').equals(new Types.ObjectId(filter.userId)); // ✅ Проверяем валидность ID
+        query.where('userId').equals(new Types.ObjectId(filter.userId));
       }
   
       if (filter?.dateStart) {
@@ -75,7 +77,26 @@ export class ReservationsService implements IReservation {
         query.where('dateStart').lte(new Date(filter.dateEnd).getTime());
       }
   
-      return await query.populate('hotel').populate('room').exec(); // ✅ Теперь populate('hotel') работает
+      // ✅ Добавляем `populate('userId')`, загружаем `name` и `surname`
+      const reservations = await query
+        .populate('hotel')
+        .populate('room')
+        .populate('userId', 'name surname') // Загружаем только нужные поля
+        .exec();
+  
+      // ✅ Приводим userId к `UserDocument`
+      return reservations.map((reservation) => ({
+        id: (reservation._id as Types.ObjectId).toHexString(),
+        user: reservation.userId
+          ? {
+              name: ((reservation.userId as unknown) as UserDocument).name,
+            }
+          : { name: 'Неизвестно', surname: '' },
+        hotel: reservation.hotel,
+        room: reservation.room,
+        dateStart: reservation.dateStart,
+        dateEnd: reservation.dateEnd,
+      }));
     } catch (error) {
       console.error('Ошибка при получении бронирований:', error);
       throw new NotFoundException('Ошибка при загрузке бронирований');

@@ -27,7 +27,13 @@ const ClientBookings = () => {
       }
 
       const response = await axios.get<Booking[]>(`http://localhost:3000/reservations?userId=${userId}`);
-      setBookings(response.data);
+      const normalizedBookings = response.data.map((booking) => ({
+        ...booking,
+        _id: booking.id, // ✅ Присваиваем `id` в `_id`
+      }));
+  
+      console.log("📥 Загруженные бронирования:", normalizedBookings);
+      setBookings(normalizedBookings); 
     } catch (err) {
       console.error('Ошибка при загрузке бронирований:', err);
       setError('Не удалось загрузить бронирования.');

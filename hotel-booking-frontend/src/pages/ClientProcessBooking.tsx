@@ -5,9 +5,10 @@ import 'react-calendar/dist/Calendar.css';
 import axios from 'axios';
 
 interface Reservation {
-  dateStart: string;
-  dateEnd: string;
-}
+    dateStart: string;
+    dateEnd: string;
+    room?: { _id: string } | null;
+  }
 
 interface HotelRoom {
   _id: string;
@@ -27,33 +28,52 @@ const ClientProcessBooking: React.FC = () => {
     if (!roomId) return;
 
     const fetchRoomData = async () => {
-      try {
-        // 1️⃣ Получаем данные о номере, чтобы узнать hotelId
-        const roomResponse = await axios.get<HotelRoom>(`http://localhost:3000/hotels/rooms/${roomId}`);
-        setHotelId(roomResponse.data.hotel);
-
-        // 2️⃣ Загружаем занятые даты
-        const reservationsResponse = await axios.get<Reservation[]>(`http://localhost:3000/reservations?roomId=${roomId}`);
-        
-        // Преобразуем бронирования в массив занятых дат
-        const reserved = reservationsResponse.data.flatMap(reservation => {
-          const start = new Date(reservation.dateStart);
-          const end = new Date(reservation.dateEnd);
-          const days = [];
-          for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
-            days.push(new Date(d));
+        try {
+          if (!roomId) {
+            setError('Ошибка: ID номера не найден');
+            return;
           }
-          return days;
-        });
+      
+          // 🟢 Запрос информации о номере
+          let roomResponse;
+          try {
+            roomResponse = await axios.get<HotelRoom>(`http://localhost:3000/hotels/rooms/${roomId}`);
+          } catch (err: any) {
+            if (err.response?.status === 404) {
+              setError('Ошибка: номер не найден в базе данных');
+              return;
+            }
+            throw err;
+          }
+      
+          setHotelId(roomResponse.data.hotel);
+      
+          // 🟢 Загружаем бронирования ТОЛЬКО для этого номера
+          const reservationsResponse = await axios.get<Reservation[]>(`http://localhost:3000/reservations?roomId=${roomId}`);
+      
+          // ✅ Теперь фильтруем бронирования правильно
+          const reserved = reservationsResponse.data
+            .filter(reservation => reservation.room && (reservation.room as any)._id === roomId) // 🎯 Сравниваем `room._id`
+            .flatMap(reservation => {
+              const start = new Date(reservation.dateStart);
+              const end = new Date(reservation.dateEnd);
+              const days = [];
+              for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                days.push(new Date(d));
+              }
+              return days;
+            });
+      
+          setBookedDates(reserved);
+        } catch (err) {
+          console.error('Ошибка при загрузке данных о номере:', err);
+          setError('Ошибка при загрузке данных о номере или бронированиях');
+        }
+      };
 
-        setBookedDates(reserved);
-      } catch (err: any) {
-        setError('Ошибка при загрузке данных о номере или бронированиях');
-      }
-    };
 
     fetchRoomData();
-  }, [roomId]);
+  }, [roomId]); // Запускаем useEffect при смене номера (roomId)
 
   const isDateDisabled = (date: Date) => bookedDates.some(d => d.toDateString() === date.toDateString());
 
@@ -85,7 +105,7 @@ const ClientProcessBooking: React.FC = () => {
       });
 
       navigate('/client/my-bookings');
-    } catch (err: any) {
+    } catch (err) {
       setError('Ошибка при бронировании номера');
     }
   };
